@@ -93,7 +93,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 .shift-label{font-size:9px;font-weight:600;color:#aaa;text-align:center;margin-bottom:2px}
 
 /* ダッシュボード */
-.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.srow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
 .sc{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--r100)}
 .scl{font-size:10px;color:var(--r600);margin-bottom:4px}
 .scv{font-size:22px;font-weight:700;color:var(--r800)}
@@ -197,6 +197,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
     <div class="srow">
       <div class="sc"><div class="scl">今月の予約数</div><div class="scv" id="d1">—</div></div>
       <div class="sc"><div class="scl">利用者数（ユニーク）</div><div class="scv" id="d2">—</div></div>
+      <div class="sc"><div class="scl">延べ利用人数</div><div class="scv" id="d5">—</div></div>
       <div class="sc"><div class="scl">今週の稼働率</div><div class="scv" id="d3">—</div></div>
       <div class="sc"><div class="scl">スタッフ数</div><div class="scv" id="d4">—</div></div>
     </div>
@@ -596,6 +597,11 @@ function renderDashboard() {
   const bkList = Object.values(bookings);
   document.getElementById('d1').textContent = bkList.filter(b=>b.date.startsWith(mo)).length;
   document.getElementById('d2').textContent = [...new Set(bkList.map(b=>b.name))].length;
+  const total = bkList.reduce((sum, b) => {
+    if(b.type==='event') return sum;
+    return sum + (b.grp==='group' ? (parseInt(b.pax)||0) : 1);
+  }, 0);
+  document.getElementById('d5').textContent = total;
   document.getElementById('d3').textContent = Math.round(bkList.length/20*100)+'%';
   document.getElementById('d4').textContent = Object.values(staff).length;
 
