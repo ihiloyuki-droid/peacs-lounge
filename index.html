@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peacs Lounge 管理表</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--r900:#5C1210;--r800:#8B2318;--r600:#B23A33;--r400:#CC5B55;--r200:#F0B8B5;--r100:#FAE8E7;--r50:#FDF5F5}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;color:#1a1a1a;font-size:14px;background:#f5f5f5;min-height:100vh}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--r800);position:sticky;top:0;z-index:20}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;background:var(--r50);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--r800)}
+.hdr-title{font-size:14px;font-weight:600;color:#fff;letter-spacing:.04em}
+.hdr-sub{font-size:10px;color:var(--r200);margin-top:1px}
+.hdr-date{font-size:11px;color:var(--r200);background:var(--r900);padding:3px 10px;border-radius:20px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--r100);position:sticky;top:55px;z-index:19}
+.tab{padding:9px 16px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--r800);font-weight:600;border-bottom-color:var(--r600)}
+.tab:hover:not(.active){color:var(--r600)}
+.content{padding:14px 18px;max-width:1100px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+.wnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.wlbl{font-size:13px;font-weight:600}
+.nbns{display:flex;gap:5px}
+.nbn{padding:4px 11px;border:1px solid var(--r200);border-radius:6px;cursor:pointer;font-size:11px;background:#fff;color:var(--r800);transition:all .15s}
+.nbn:hover{background:var(--r50)}
+.lgrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:9px;align-items:center}
+.lgi{display:flex;align-items:center;gap:4px;font-size:10px;color:#666}
+.lgd{width:10px;height:10px;border-radius:2px}
+
+/* カレンダー */
+.calwrap{border:1px solid var(--r200);border-radius:9px;overflow:hidden;background:#fff}
+.cal-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.cal-table col.c-time{width:52px}
+.cal-hdr-time{background:var(--r50);border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);font-size:9px;color:var(--r600);text-align:center;padding:4px 2px;vertical-align:middle}
+.cal-th{border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);padding:0;vertical-align:top}
+.cal-th:last-child{border-right:none}
+.day-hdr{padding:5px 3px;text-align:center}
+.dhn{font-size:11px;font-weight:600}
+.dhd{font-size:10px;margin-top:1px}
+.dhd.tod{font-weight:700}
+.staff-strip{padding:3px;display:flex;flex-wrap:wrap;gap:2px;border-top:1px solid var(--r100);background:#fff;min-height:22px}
+.schip{display:flex;align-items:center;gap:2px;border-radius:8px;padding:1px 4px;font-size:8px;font-weight:600;white-space:nowrap}
+.calvbody-wrap{overflow-y:auto;max-height:320px}
+.cal-time-lbl{background:#fff;font-size:9px;color:#aaa;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);text-align:center;padding:2px 1px 0;vertical-align:top;height:22px}
+.dcell{height:22px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);cursor:pointer;transition:background .1s;position:relative;overflow:hidden;padding:0}
+.dcell:last-child{border-right:none}
+.dcell:hover{background:var(--r50)}
+.dcell.sat-col{background:#EBF3FC}.dcell.sat-col:hover{background:#dbeeff}
+.dcell.sun-col{background:#FFF5F5}.dcell.sun-col:hover{background:#ffe8e7}
+.bbar{position:absolute;inset:1px;border-radius:2px;padding:1px 3px;font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;color:#fff}
+.staff-shade{position:absolute;inset:0;pointer-events:none}
+
+/* 予約一覧 */
+.lcard{border:1px solid var(--r200);border-radius:9px;overflow:hidden;margin-bottom:12px;background:#fff}
+.lrow{display:flex;align-items:center;padding:9px 13px;border-bottom:1px solid var(--r100);gap:8px}
+.lrow:last-child{border-bottom:none}
+.lrow:hover{background:var(--r50)}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.rm{flex:1;min-width:0}
+.rn{font-size:12px;font-weight:600}
+.rs{font-size:10px;color:#888;margin-top:1px}
+.bdg{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.b-ok{background:#EAF3DE;color:#27500A}
+.b-warn{background:#FAEEDA;color:#633806}
+.b-ind{background:#EAF3DE;color:#27500A}
+.b-grp{background:#E6F1FB;color:#0C447C}
+.b-evt{background:#FAEEDA;color:#633806}
+.icon-btn{cursor:pointer;padding:3px 6px;border-radius:4px;font-size:12px;color:#ccc;transition:all .15s;border:none;background:transparent}
+.icon-btn:hover{background:var(--r100);color:var(--r800)}
+
+/* シフト */
+.shift-wrap{border:1px solid var(--r200);border-radius:9px;overflow:hidden;background:#fff}
+
+/* ダッシュボード */
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.sc{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--r100)}
+.scl{font-size:10px;color:var(--r600);margin-bottom:4px}
+.scv{font-size:22px;font-weight:700;color:var(--r800)}
+.twoc{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stitle{font-size:12px;font-weight:600;margin-bottom:9px;color:#444}
+
+/* ボタン */
+.addbtn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--r200);border-radius:6px;cursor:pointer;font-size:11px;background:#fff;color:var(--r800);transition:all .15s}
+.addbtn:hover{background:var(--r50)}
+
+/* モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.22);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;border:1px solid var(--r200);padding:20px;width:370px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.mtitle{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--r800)}
+.flbl{font-size:10px;color:#888;margin-bottom:3px;display:block}
+.fg{margin-bottom:10px}
+.fi{width:100%;padding:7px 10px;border:1px solid var(--r200);border-radius:7px;font-size:12px;color:#1a1a1a;background:#fff}
+.fi:focus{outline:none;border-color:var(--r400)}
+.mact{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.btp{padding:7px 16px;background:var(--r600);color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600}
+.btp:hover{background:var(--r800)}
+.bts{padding:7px 13px;background:transparent;color:#888;border:1px solid var(--r200);border-radius:7px;font-size:12px;cursor:pointer}
+.radio-row{display:flex;gap:10px}
+.radio-opt{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;padding:5px 10px;border:1px solid var(--r200);border-radius:6px;transition:all .15s}
+.radio-opt:hover{background:var(--r50)}
+.radio-opt input{accent-color:var(--r600)}
+
+/* ステータスバー */
+.status-bar{font-size:10px;text-align:right;padding:4px 0;min-height:18px;color:#aaa}
+.status-bar.saving{color:#BA7517}
+.status-bar.saved{color:#3B6D11}
+.status-bar.err{color:var(--r600)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">PL</div>
+    <div><div class="hdr-title">Peacs Lounge 管理表</div><div class="hdr-sub">予約・シフト管理システム</div></div>
+  </div>
+  <div class="hdr-date" id="hdr-date"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="sw('calendar')">カレンダー</div>
+  <div class="tab" onclick="sw('bookings')">予約一覧</div>
+  <div class="tab" onclick="sw('shifts')">シフト管理</div>
+  <div class="tab" onclick="sw('dashboard')">ダッシュボード</div>
+</div>
+
+<div class="content">
+  <div class="status-bar" id="status-bar">Firebase に接続中...</div>
+
+  <!-- カレンダー -->
+  <div class="view active" id="view-calendar">
+    <div class="wnav">
+      <div class="wlbl" id="cal-wlbl"></div>
+      <div class="nbns">
+        <div class="nbn" onclick="wk(-1,'cal')">← 前週</div>
+        <div class="nbn" onclick="wk(0,'cal')">今週</div>
+        <div class="nbn" onclick="wk(1,'cal')">次週 →</div>
+      </div>
+    </div>
+    <div class="lgrow">
+      <div class="lgi"><div class="lgd" style="background:#63A826"></div> 一般（個人）</div>
+      <div class="lgi"><div class="lgd" style="background:#2E86DE"></div> 一般（団体）</div>
+      <div class="lgi"><div class="lgd" style="background:#F0A500"></div> イベント</div>
+      <div class="lgi"><div style="display:flex;gap:1px"><div style="width:5px;height:10px;border-radius:1px;background:#EF9F27"></div><div style="width:5px;height:10px;border-radius:1px;background:#5DCAA5"></div></div> スタッフ勤務</div>
+      <div class="lgi"><div class="lgd" style="background:#B5D4F4"></div> 土</div>
+      <div class="lgi"><div class="lgd" style="background:#FAE8E7"></div> 日</div>
+    </div>
+    <div class="calwrap" id="cal-outer"></div>
+  </div>
+
+  <!-- 予約一覧 -->
+  <div class="view" id="view-bookings">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="stitle" style="margin:0">予約一覧</div>
+      <div class="addbtn" onclick="openBkModal(null)">+ 新規予約</div>
+    </div>
+    <div class="lcard" id="bk-list"></div>
+  </div>
+
+  <!-- シフト管理 -->
+  <div class="view" id="view-shifts">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="stitle" style="margin:0">スタッフシフト <span style="font-size:9px;color:#aaa;font-weight:400">（バーをドラッグで設定）</span></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div class="addbtn" onclick="openStaffModal()">+ スタッフ追加</div>
+        <div class="nbns">
+          <div class="nbn" onclick="wk(-1,'shift')">← 前週</div>
+          <div class="nbn" onclick="wk(0,'shift')">今週</div>
+          <div class="nbn" onclick="wk(1,'shift')">次週 →</div>
+        </div>
+      </div>
+    </div>
+    <div class="wlbl" id="shift-wlbl" style="font-size:12px;color:#888;margin-bottom:8px"></div>
+    <div class="shift-wrap" id="shift-grid"></div>
+  </div>
+
+  <!-- ダッシュボード -->
+  <div class="view" id="view-dashboard">
+    <div class="srow">
+      <div class="sc"><div class="scl">今月の予約数</div><div class="scv" id="d1">—</div></div>
+      <div class="sc"><div class="scl">利用者数（ユニーク）</div><div class="scv" id="d2">—</div></div>
+      <div class="sc"><div class="scl">今週の稼働率</div><div class="scv" id="d3">—</div></div>
+      <div class="sc"><div class="scl">スタッフ数</div><div class="scv" id="d4">—</div></div>
+    </div>
+    <div class="twoc">
+      <div><div class="stitle">直近の予約</div><div class="lcard" id="dash-bk"></div></div>
+      <div><div class="stitle">今日の勤務スタッフ</div><div class="lcard" id="dash-staff"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 予約モーダル -->
+<div class="modal-overlay" id="modal-bk" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="mtitle" id="bk-mtitle">予約を追加</div>
+    <div class="fg"><label class="flbl">種別</label>
+      <select class="fi" id="i-type" onchange="onTypeChange()">
+        <option value="user">一般予約</option><option value="event">イベント</option>
+      </select>
+    </div>
+    <div id="user-detail-section">
+      <div class="fg"><label class="flbl">利用区分</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="grp" value="individual" checked onchange="onGrpChange()"> 個人</label>
+          <label class="radio-opt"><input type="radio" name="grp" value="group" onchange="onGrpChange()"> 団体</label>
+        </div>
+      </div>
+      <div class="fg" id="pax-section" style="display:none"><label class="flbl">人数</label><input class="fi" id="i-pax" type="number" min="2" max="500" placeholder="例：15"></div>
+    </div>
+    <div class="fg"><label class="flbl">利用者名 / イベント名</label><input class="fi" id="i-name" type="text" placeholder="山田 太郎"></div>
+    <div class="fg"><label class="flbl">スペース</label>
+      <select class="fi" id="i-space">
+        <option value="メインスペース">メインスペース</option>
+        <option value="個室">個室</option>
+        <option value="リラックススペース">リラックススペース</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flbl">日付</label><input class="fi" id="i-date" type="date"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="fg"><label class="flbl">開始</label><select class="fi" id="i-start"></select></div>
+      <div class="fg"><label class="flbl">終了</label><select class="fi" id="i-end"></select></div>
+    </div>
+    <div class="fg"><label class="flbl">ステータス</label>
+      <select class="fi" id="i-status"><option value="仮予約">仮予約</option><option value="確認済み">確認済み</option></select>
+    </div>
+    <div class="mact">
+      <div class="bts" onclick="document.getElementById('modal-bk').classList.remove('open')">キャンセル</div>
+      <div class="btp" onclick="saveBk()">保存する</div>
+    </div>
+  </div>
+</div>
+
+<!-- スタッフモーダル -->
+<div class="modal-overlay" id="modal-staff" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:320px">
+    <div class="mtitle">スタッフを追加</div>
+    <div class="fg"><label class="flbl">氏名</label><input class="fi" id="s-name" type="text" placeholder="例：山本 花子"></div>
+    <div class="fg"><label class="flbl">役職</label>
+      <select class="fi" id="s-role"><option>マネージャー</option><option>スタッフ</option><option>アルバイト</option></select>
+    </div>
+    <div class="fg"><label class="flbl">カラー</label>
+      <select class="fi" id="s-color">
+        <option value="0">アンバー</option><option value="1">ティール</option>
+        <option value="2">パープル</option><option value="3">ピンク</option>
+        <option value="4">ブルー</option><option value="5">コーラル</option>
+      </select>
+    </div>
+    <div class="mact">
+      <div class="bts" onclick="document.getElementById('modal-staff').classList.remove('open')">キャンセル</div>
+      <div class="btp" onclick="saveStaff()">追加する</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJf_ToR5Uu06-SWjO6xoTcWIyA3Sxmvao",
+  authDomain: "peacs-lounge.firebaseapp.com",
+  projectId: "peacs-lounge",
+  storageBucket: "peacs-lounge.firebasestorage.app",
+  messagingSenderId: "675731178007",
+  appId: "1:675731178007:web:0ff67c8892af9b2f9f1252",
+  databaseURL: "https://peacs-lounge-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── 定数 ──
+const PALETTES = [
+  {bg:'#EF9F27',tc:'#633806',shade:'rgba(239,159,39,0.12)'},
+  {bg:'#5DCAA5',tc:'#085041',shade:'rgba(93,202,165,0.12)'},
+  {bg:'#7F77DD',tc:'#3C3489',shade:'rgba(127,119,221,0.12)'},
+  {bg:'#D4537E',tc:'#72243E',shade:'rgba(212,83,126,0.12)'},
+  {bg:'#378ADD',tc:'#0C447C',shade:'rgba(55,138,221,0.12)'},
+  {bg:'#D85A30',tc:'#712B13',shade:'rgba(216,90,48,0.12)'},
+];
+const DN_ALL = [
+  {label:'月',di:0,sat:false,sun:false},{label:'火',di:1,sat:false,sun:false},
+  {label:'水',di:2,sat:false,sun:false},{label:'木',di:3,sat:false,sun:false},
+  {label:'金',di:4,sat:false,sun:false},{label:'土',di:5,sat:true,sun:false},
+  {label:'日',di:6,sat:false,sun:true}
+];
+const SLOTS = [];
+for(let h=8;h<24;h++){SLOTS.push(h+':00');SLOTS.push(h+':30')}
+const BK = {
+  ind:{bar:'#63A826',cell:'#EAF3DE',avBg:'#EAF3DE',avTc:'#27500A'},
+  grp:{bar:'#2E86DE',cell:'#E6F1FB',avBg:'#E6F1FB',avTc:'#0C447C'},
+  evt:{bar:'#F0A500',cell:'#FAEEDA',avBg:'#FAEEDA',avTc:'#633806'},
+};
+
+// ── 状態 ──
+let staff = {};
+let bookings = {};
+let shiftMap = {};
+let calWeekOff = 0, shiftWeekOff = 0;
+let editingBkId = null;
+let dragging = false, dragSid = null, dragDi = -1, dragOrigRange = null;
+let saveTimer = null;
+let currentTab = 'calendar';
+
+// ── ユーティリティ ──
+function setStatus(msg, cls='') {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg; el.className = 'status-bar ' + cls;
+}
+function monday(off) {
+  const n = new Date(); const day = n.getDay();
+  const base = n.getDate() - day + (day === 0 ? -6 : 1);
+  const m = new Date(n); m.setDate(base + off * 7); m.setHours(0,0,0,0); return m;
+}
+function dateStr(off, di) {
+  const m = monday(off); const d = new Date(m); d.setDate(d.getDate() + di);
+  return d.toISOString().split('T')[0];
+}
+function fmt(d) { return (d.getMonth()+1) + '/' + d.getDate(); }
+function minToStr(m) { const h=Math.floor(m/60),mi=m%60; return h+':'+(mi===0?'00':'30'); }
+function isToday(d) { const t=new Date(); return d.toDateString()===t.toDateString(); }
+function slotMin(s) { const[h,mi]=s.split(':').map(Number); return h*60+mi; }
+function getPal(s) { return PALETTES[(s.pal||0) % PALETTES.length]; }
+function bkc(b) { return b.type==='event' ? BK.evt : b.grp==='group' ? BK.grp : BK.ind; }
+function getShift(sid, di, off) {
+  const wo = off !== undefined ? off : shiftWeekOff;
+  return ((shiftMap[sid]||{})[wo+'_'+di]) || null;
+}
+function staffAtSlot(di, slot, off) {
+  const sm = slotMin(slot);
+  return Object.values(staff).filter(s => {
+    const r = getShift(s.id, di, off);
+    return r && sm >= r[0] && sm < r[1];
+  });
+}
+
+// ── Firebase リアルタイム同期 ──
+onValue(ref(db, 'staff'), snap => {
+  staff = {};
+  snap.forEach(c => { staff[c.key] = {id: c.key, ...c.val()}; });
+  renderAll();
+  setStatus('同期済み — ' + new Date().toLocaleTimeString('ja-JP'), 'saved');
+});
+onValue(ref(db, 'bookings'), snap => {
+  bookings = {};
+  snap.forEach(c => { bookings[c.key] = {id: c.key, ...c.val()}; });
+  renderAll();
+});
+onValue(ref(db, 'shifts'), snap => {
+  shiftMap = {};
+  snap.forEach(sid => {
+    shiftMap[sid.key] = {};
+    sid.forEach(e => { shiftMap[sid.key][e.key] = e.val(); });
+  });
+  renderAll();
+});
+
+function renderAll() {
+  renderCalendar();
+  renderBookings();
+  renderShifts();
+  renderDashboard();
+}
+
+// ── タブ切り替え ──
+window.sw = function(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['calendar','bookings','shifts','dashboard'][i] === tab);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+};
+
+window.wk = function(d, target) {
+  if (target === 'cal') calWeekOff = d === 0 ? 0 : calWeekOff + d;
+  else shiftWeekOff = d === 0 ? 0 : shiftWeekOff + d;
+  renderAll();
+};
+
+// ── カレンダー ──
+function renderCalendar() {
+  const m = monday(calWeekOff);
+  document.getElementById('cal-wlbl').textContent = m.getFullYear()+'年'+(m.getMonth()+1)+'月';
+  const outer = document.getElementById('cal-outer');
+
+  let html = `<table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><thead><tr>`;
+  html += `<th class="cal-hdr-time">時刻</th>`;
+  DN_ALL.forEach(dd => {
+    const d = new Date(m); d.setDate(d.getDate() + dd.di);
+    const tod = isToday(d);
+    const nc = dd.sat?'#185FA5':dd.sun?'#B23A33':'#8B2318';
+    const dc = dd.sat?'#378ADD':dd.sun?'#CC5B55':'#B23A33';
+    const bg = dd.sat?'background:#EBF3FC':dd.sun?'background:#FFF5F5':'background:#FDF5F5';
+    const onDuty = Object.values(staff).map(s => {
+      const r = getShift(s.id, dd.di, calWeekOff);
+      if(!r) return null;
+      const p = getPal(s);
+      return `<div class="schip" style="background:${p.shade};border:1px solid ${p.bg}"><div style="width:11px;height:11px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700">${s.init}</div><span style="color:${p.tc}">${s.name.split(' ')[0]} ${minToStr(r[0])}〜${r[1]===24*60?'24:00':minToStr(r[1])}</span></div>`;
+    }).filter(Boolean).join('');
+    html += `<th class="cal-th" style="${bg}"><div class="day-hdr"><div class="dhn" style="color:${nc}">${dd.label}</div><div class="dhd${tod?' tod':''}" style="color:${dc}">${fmt(d)}${tod?' 今日':''}</div></div><div class="staff-strip">${onDuty||'<span style="font-size:8px;color:#ccc">未設定</span>'}</div></th>`;
+  });
+  html += `</tr></thead></table>`;
+  html += `<div class="calvbody-wrap"><table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><tbody id="cal-tbody"></tbody></table></div>`;
+  outer.innerHTML = html;
+
+  const tbody = document.getElementById('cal-tbody');
+  SLOTS.forEach(slot => {
+    const tr = document.createElement('tr');
+    const td0 = document.createElement('td');
+    td0.className = 'cal-time-lbl';
+    td0.textContent = slot.endsWith(':00') ? slot : '';
+    tr.appendChild(td0);
+    DN_ALL.forEach(dd => {
+      const ds = dateStr(calWeekOff, dd.di);
+      const td = document.createElement('td');
+      td.className = 'dcell';
+      if(dd.sat) td.classList.add('sat-col');
+      if(dd.sun) td.classList.add('sun-col');
+      const bk = Object.values(bookings).find(b => b.date===ds && b.start===slot);
+      if(bk) {
+        const c = bkc(bk); td.style.background = c.cell;
+        const bar = document.createElement('div'); bar.className='bbar'; bar.style.background=c.bar;
+        bar.textContent = (bk.type==='event'?'[E] ':bk.grp==='group'?'[団'+bk.pax+'名] ':'')+bk.name+' '+bk.space;
+        td.appendChild(bar); td.onclick = () => openBkModal(bk.id);
+      } else {
+        const onNow = staffAtSlot(dd.di, slot, calWeekOff);
+        if(onNow.length) {
+          const cw = 100/onNow.length;
+          onNow.forEach((s,i) => { const p=getPal(s); const sh=document.createElement('div'); sh.className='staff-shade'; sh.style.cssText=`left:${i*cw}%;width:${cw}%;background:${p.shade};border-left:1.5px solid ${p.bg}`; td.appendChild(sh); });
+        }
+        td.onclick = () => openBkModalWith(ds, slot);
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ── 予約一覧 ──
+function renderBookings() {
+  const el = document.getElementById('bk-list');
+  const list = Object.values(bookings).sort((a,b) => (a.date+a.start).localeCompare(b.date+b.start));
+  if(!list.length){el.innerHTML='<div style="padding:18px;text-align:center;color:#aaa;font-size:12px">予約がありません</div>';return;}
+  el.innerHTML = list.map(b => {
+    const c = bkc(b); const isEvt=b.type==='event', isGrp=b.grp==='group';
+    const typeLbl = isEvt?'イベント':isGrp?'団体':'個人';
+    const typeCls = isEvt?'b-evt':isGrp?'b-grp':'b-ind';
+    const paxBadge = isGrp ? `<div class="bdg b-grp" style="margin-right:3px">${b.pax}名</div>` : '';
+    return `<div class="lrow">
+      <div class="av" style="background:${c.avBg};color:${c.avTc}">${b.name[0]}</div>
+      <div class="rm"><div class="rn">${b.name}</div><div class="rs">${b.space} ・ ${b.date} ${b.start}〜${b.end}</div></div>
+      ${paxBadge}
+      <div class="bdg ${typeCls}" style="margin-right:3px">${typeLbl}</div>
+      <div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}" style="margin-right:3px">${b.status}</div>
+      <button class="icon-btn" onclick="openBkModal('${b.id}')">✏</button>
+      <button class="icon-btn" onclick="delBk('${b.id}')" style="color:#F0B8B5">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ── シフト管理 ──
+function renderShifts() {
+  const m = monday(shiftWeekOff);
+  document.getElementById('shift-wlbl').textContent = m.getFullYear()+'年'+(m.getMonth()+1)+'月';
+  const TMIN=8*60, TSPAN=16*60;
+  const ticks=[8,10,12,14,16,18,20,22,24];
+  const staffList = Object.values(staff);
+
+  let html = `<div style="display:grid;grid-template-columns:92px repeat(7,1fr);background:#FDF5F5;border-bottom:1px solid #F0B8B5">`;
+  html += `<div style="padding:6px 10px;font-size:10px;font-weight:700;color:#8B2318;border-right:1px solid #F0B8B5">スタッフ</div>`;
+  DN_ALL.forEach(dd => {
+    const d = new Date(m); d.setDate(d.getDate()+dd.di);
+    const nc=dd.sat?'#185FA5':dd.sun?'#B23A33':'#8B2318';
+    const bg=dd.sat?'#EBF3FC':dd.sun?'#FFF5F5':'#FDF5F5';
+    html += `<div style="padding:5px 4px;font-size:10px;font-weight:700;color:${nc};border-right:1px solid #F0B8B5;text-align:center;background:${bg}">${dd.label}<br><span style="font-weight:400;font-size:9px;color:#aaa">${fmt(d)}</span></div>`;
+  });
+  html += '</div>';
+
+  if(!staffList.length){
+    html += '<div style="padding:24px;text-align:center;font-size:12px;color:#aaa">スタッフを追加してください</div>';
+    document.getElementById('shift-grid').innerHTML=html; return;
+  }
+
+  html += `<div style="overflow-y:auto;max-height:500px">`;
+  staffList.forEach(s => {
+    const p = getPal(s);
+    html += `<div style="border-bottom:1px solid #FAE8E7"><div style="display:grid;grid-template-columns:92px repeat(7,1fr)">`;
+    html += `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-right:1px solid #FAE8E7;background:#fffcfc">`;
+    html += `<div style="width:20px;height:20px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${s.init}</div>`;
+    html += `<div><div style="font-size:11px;font-weight:600">${s.name}</div><div style="font-size:9px;color:#aaa">${s.role}</div></div>`;
+    html += `<div style="margin-left:auto;cursor:pointer;font-size:12px;color:#ddd;padding:2px 4px" onclick="removeStaff('${s.id}')">×</div></div>`;
+    DN_ALL.forEach(dd => {
+      const r = getShift(s.id, dd.di);
+      const barL=r?(((r[0]-TMIN)/TSPAN)*100).toFixed(2)+'%':'0';
+      const barW=r?(((r[1]-r[0])/TSPAN)*100).toFixed(2)+'%':'0';
+      const label=r?minToStr(r[0])+'〜'+(r[1]===24*60?'24:00':minToStr(r[1])):'休み';
+      const cellBg=dd.sat?'#f0f6fc':dd.sun?'#fff8f8':'';
+      const trackBg=dd.sat?'#ddeeff':dd.sun?'#ffecec':'#f5eded';
+      html += `<div style="border-right:1px solid #FAE8E7;padding:5px 4px 3px;${cellBg?'background:'+cellBg:''}">`;
+      html += `<div style="font-size:9px;color:${r?p.tc:'#ccc'};margin-bottom:3px;font-weight:${r?'600':'400'}">${label}</div>`;
+      html += `<div style="position:relative;height:20px;background:${trackBg};border-radius:3px;cursor:crosshair;user-select:none" onmousedown="startDrag(event,'${s.id}',${dd.di})" id="drg-${s.id}-${dd.di}">`;
+      ticks.forEach(t=>{const pct=((t*60-TMIN)/TSPAN*100).toFixed(2);html+=`<div style="position:absolute;left:${pct}%;top:0;width:1px;height:6px;background:#F0B8B5;pointer-events:none"></div><div style="position:absolute;left:${pct}%;bottom:0;font-size:7px;color:#ccc;transform:translateX(-50%);pointer-events:none">${t}</div>`;});
+      if(r){html+=`<div style="position:absolute;left:${barL};width:${barW};top:1px;bottom:5px;background:${p.bg};opacity:.9;border-radius:3px;pointer-events:none"></div><div style="position:absolute;left:${barL};top:1px;bottom:5px;display:flex;align-items:center;padding-left:3px;font-size:7px;font-weight:700;color:#fff;pointer-events:none;overflow:hidden;white-space:nowrap">${label}</div>`;}
+      html += `</div><div style="margin-top:3px"><span onclick="clearShift('${s.id}',${dd.di})" style="cursor:pointer;font-size:8px;padding:1px 6px;border-radius:3px;display:inline-block;background:${!r?'#D3D1C7':'#FAE8E7'};color:${!r?'#666':'#8B2318'}">休み</span></div>`;
+      html += `</div>`;
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('shift-grid').innerHTML = html;
+  attachDragListeners();
+}
+
+// ── ダッシュボード ──
+function renderDashboard() {
+  const now = new Date();
+  const mo = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  const bkList = Object.values(bookings);
+  document.getElementById('d1').textContent = bkList.filter(b=>b.date.startsWith(mo)).length;
+  document.getElementById('d2').textContent = [...new Set(bkList.map(b=>b.name))].length;
+  document.getElementById('d3').textContent = Math.round(bkList.length/20*100)+'%';
+  document.getElementById('d4').textContent = Object.values(staff).length;
+
+  const recent = [...bkList].sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)).slice(0,5);
+  document.getElementById('dash-bk').innerHTML = recent.length
+    ? recent.map(b=>{const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';return `<div class="lrow"><div class="rm"><div class="rn">${b.name}${isGrp?' (団体'+b.pax+'名)':''}</div><div class="rs">${b.space} ・ ${b.date}</div></div><div class="bdg" style="background:${c.avBg};color:${c.avTc};margin-right:3px">${isEvt?'イベント':isGrp?'団体':'個人'}</div><div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}">${b.status}</div></div>`;}).join('')
+    : '<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">予約なし</div>';
+
+  const todayDow = now.getDay(); const di = todayDow>=1&&todayDow<=5?todayDow-1:0;
+  const staffList = Object.values(staff);
+  document.getElementById('dash-staff').innerHTML = staffList.length
+    ? staffList.map(s=>{const r=getShift(s.id,di,0);const p=getPal(s);const label=r?minToStr(r[0])+'〜'+(r[1]===24*60?'24:00':minToStr(r[1])):'休み';return `<div class="lrow"><div class="av" style="background:${p.bg};color:${p.tc}">${s.init}</div><div class="rm"><div class="rn">${s.name}</div><div class="rs">${s.role}</div></div><div class="bdg" style="background:${r?p.shade:'#f0f0f0'};color:${r?p.tc:'#aaa'};border:1px solid ${r?p.bg:'#ddd'}">${label}</div></div>`;}).join('')
+    : '<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">スタッフなし</div>';
+}
+
+// ── ドラッグ ──
+function attachDragListeners() {
+  document.onmousemove = function(e) {
+    if(!dragging) return;
+    const el = document.getElementById('drg-'+dragSid+'-'+dragDi);
+    if(!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+    const mv = 8*60 + Math.round(pct*16*60/30)*30;
+    let newR;
+    if(dragOrigRange){const dur=dragOrigRange[1]-dragOrigRange[0];let ns=Math.max(8*60,Math.min(24*60-dur,mv-Math.round(dur/2)));newR=[ns,ns+dur];}
+    else{newR=[Math.min(mv,23*60),Math.min(mv+60,24*60)];}
+    if(!shiftMap[dragSid]) shiftMap[dragSid]={};
+    shiftMap[dragSid][shiftWeekOff+'_'+dragDi] = newR;
+    renderShifts();
+  };
+  document.onmouseup = function() {
+    if(dragging) {
+      const r = getShift(dragSid, dragDi);
+      if(r) {
+        set(ref(db, `shifts/${dragSid}/${shiftWeekOff}_${dragDi}`), r);
+        setStatus('保存しました', 'saved');
+      }
+      dragging=false; dragOrigRange=null;
+    }
+  };
+}
+
+window.startDrag = function(e, sid, di) {
+  const el = document.getElementById('drg-'+sid+'-'+di);
+  const rect = el.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+  const mv = 8*60 + Math.round(pct*16*60/30)*30;
+  const r = getShift(sid, di);
+  dragging=true; dragSid=sid; dragDi=di;
+  dragOrigRange = r ? (Math.abs(mv-(r[0]+r[1])/2)<(r[1]-r[0])/2 ? r.slice() : null) : null;
+  e.preventDefault();
+};
+
+window.clearShift = function(sid, di) {
+  remove(ref(db, `shifts/${sid}/${shiftWeekOff}_${di}`));
+  if(shiftMap[sid]) delete shiftMap[sid][shiftWeekOff+'_'+di];
+  renderShifts();
+  setStatus('保存しました', 'saved');
+};
+
+window.removeStaff = function(id) {
+  if(!confirm('このスタッフを削除しますか？')) return;
+  remove(ref(db, 'staff/'+id));
+  remove(ref(db, 'shifts/'+id));
+};
+
+// ── スタッフ ──
+window.openStaffModal = function() {
+  document.getElementById('s-name').value='';
+  document.getElementById('modal-staff').classList.add('open');
+};
+window.saveStaff = function() {
+  const name = document.getElementById('s-name').value.trim();
+  if(!name) return;
+  const newRef = push(ref(db, 'staff'));
+  set(newRef, {name, role:document.getElementById('s-role').value, init:name[0], pal:parseInt(document.getElementById('s-color').value)});
+  document.getElementById('modal-staff').classList.remove('open');
+};
+
+// ── 予約 ──
+function buildTimes(startSlot) {
+  const si = startSlot ? SLOTS.indexOf(startSlot) : 2;
+  document.getElementById('i-start').innerHTML = SLOTS.map((s,i)=>`<option${i===si?' selected':''}>${s}</option>`).join('');
+  document.getElementById('i-end').innerHTML = SLOTS.map((s,i)=>`<option${i===Math.min(si+4,SLOTS.length-1)?' selected':''}>${s}</option>`).join('');
+}
+window.onTypeChange = function(){document.getElementById('user-detail-section').style.display=document.getElementById('i-type').value==='event'?'none':'block';};
+window.onGrpChange = function(){document.getElementById('pax-section').style.display=document.querySelector('input[name="grp"]:checked').value==='group'?'block':'none';};
+
+window.openBkModal = function(id) {
+  editingBkId = id;
+  document.getElementById('bk-mtitle').textContent = id ? '予約を編集' : '予約を追加';
+  if(id) {
+    const b = bookings[id]; if(!b) return;
+    document.getElementById('i-type').value = b.type; window.onTypeChange();
+    if(b.type==='user'){const gv=b.grp||'individual';document.querySelector(`input[name="grp"][value="${gv}"]`).checked=true;document.getElementById('pax-section').style.display=gv==='group'?'block':'none';document.getElementById('i-pax').value=b.pax||'';}
+    document.getElementById('i-name').value=b.name;
+    document.getElementById('i-space').value=b.space;
+    document.getElementById('i-date').value=b.date;
+    buildTimes(b.start);
+    document.getElementById('i-end').value=b.end;
+    document.getElementById('i-status').value=b.status;
+  } else {
+    document.getElementById('i-type').value='user'; window.onTypeChange();
+    document.querySelector('input[name="grp"][value="individual"]').checked=true;
+    document.getElementById('pax-section').style.display='none';
+    document.getElementById('i-name').value='';
+    document.getElementById('i-date').value=dateStr(calWeekOff,0);
+    document.getElementById('i-status').value='仮予約';
+    buildTimes();
+  }
+  document.getElementById('modal-bk').classList.add('open');
+};
+
+window.openBkModalWith = function(date, slot) {
+  window.openBkModal(null);
+  document.getElementById('i-date').value=date;
+  buildTimes(slot);
+};
+
+window.saveBk = function() {
+  const name = document.getElementById('i-name').value.trim(); if(!name) return;
+  const type = document.getElementById('i-type').value;
+  const grp = type==='user' ? document.querySelector('input[name="grp"]:checked').value : null;
+  const pax = grp==='group' ? parseInt(document.getElementById('i-pax').value)||null : null;
+  const data = {type,grp,pax,name,space:document.getElementById('i-space').value,date:document.getElementById('i-date').value,start:document.getElementById('i-start').value,end:document.getElementById('i-end').value,status:document.getElementById('i-status').value};
+  if(editingBkId) {
+    update(ref(db, 'bookings/'+editingBkId), data);
+  } else {
+    push(ref(db, 'bookings'), data);
+  }
+  document.getElementById('modal-bk').classList.remove('open');
+  setStatus('保存しました', 'saved');
+};
+
+window.delBk = function(id) {
+  if(!confirm('この予約を削除しますか？')) return;
+  remove(ref(db, 'bookings/'+id));
+};
+
+// ── 初期化 ──
+const now = new Date();
+document.getElementById('hdr-date').textContent = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）';
+</script>
+</body>
+</html>
