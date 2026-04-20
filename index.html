@@ -105,6 +105,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 .toggle-btn.is-on{background:var(--r100);color:var(--r800)}
 .toggle-btn:active{opacity:.8}
 .shift-del-btn{background:none;border:none;color:#ddd;font-size:14px;cursor:pointer;padding:0 4px}
+.move-btn{background:none;border:1px solid var(--r100);border-radius:3px;color:var(--r400);font-size:9px;cursor:pointer;padding:1px 3px;line-height:1;-webkit-tap-highlight-color:transparent}
+.move-btn:active{background:var(--r50)}
+.move-btn:disabled{cursor:default}
 
 /* ─── ダッシュボード ─── */
 .srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
@@ -146,10 +149,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 
 /* ステータス */
 .status-bar{font-size:10px;text-align:right;padding:3px 0;min-height:16px;color:#aaa}
-.shift-staff-card.dragging{opacity:.4;border:2px dashed var(--r400)}
-.shift-staff-card.drag-over{border-top:3px solid var(--r600)}
-.drag-handle{cursor:grab;font-size:16px;color:#ccc;padding:0 6px;user-select:none;touch-action:none}
-.drag-handle:active{cursor:grabbing}
 .dash-section-title{font-size:12px;font-weight:700;color:var(--r800);margin:16px 0 8px;padding-left:2px;letter-spacing:.03em}
 .chart-card{background:#fff;border:1px solid var(--r100);border-radius:10px;padding:16px 14px;margin-bottom:14px;overflow-x:auto}
 .chart-inner{min-width:320px}
@@ -528,42 +527,19 @@ function renderBookings(){
 }
 
 // ── シフト管理 ──
-let dragSrcId=null;
 function sortedStaff(){return Object.values(staff).sort((a,b)=>(a.order??9999)-(b.order??9999));}
-function dragStart(e,id){
-  dragSrcId=id;
-  setTimeout(()=>{ const el=document.getElementById('scard-'+id); if(el)el.classList.add('dragging'); },0);
-  e.dataTransfer.effectAllowed='move';
-  e.dataTransfer.setData('text/plain',id);
-}
-function dragOver(e,id){
-  e.preventDefault();
-  e.dataTransfer.dropEffect='move';
-  document.querySelectorAll('.shift-staff-card').forEach(el=>el.classList.remove('drag-over'));
-  if(id!==dragSrcId){ const el=document.getElementById('scard-'+id); if(el)el.classList.add('drag-over'); }
-}
-function dragLeave(e,id){
-  const el=document.getElementById('scard-'+id);
-  if(el)el.classList.remove('drag-over');
-}
-function dragDrop(e,id){
-  e.preventDefault();
-  e.stopPropagation();
-  if(!dragSrcId||dragSrcId===id){dragEnd();return;}
+function moveStaff(id,dir){
   const list=sortedStaff();
-  const srcIdx=list.findIndex(s=>s.id===dragSrcId);
-  const tgtIdx=list.findIndex(s=>s.id===id);
-  if(srcIdx<0||tgtIdx<0){dragEnd();return;}
-  const moved=list.splice(srcIdx,1)[0];
-  list.splice(tgtIdx,0,moved);
+  const idx=list.findIndex(s=>s.id===id);
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=list.length)return;
+  // swap order values
+  const tmp=list[idx].order??idx;
+  const swapOrder=list[newIdx].order??newIdx;
   const updates={};
-  list.forEach((s,i)=>{updates['staff/'+s.id+'/order']=i;});
+  updates['staff/'+list[idx].id+'/order']=swapOrder;
+  updates['staff/'+list[newIdx].id+'/order']=tmp;
   update(ref(db),updates).then(()=>setStatus('並び順を保存しました','saved'));
-  dragEnd();
-}
-function dragEnd(){
-  document.querySelectorAll('.shift-staff-card').forEach(el=>{el.classList.remove('dragging','drag-over');});
-  dragSrcId=null;
 }
 
 function renderShifts(){
@@ -573,7 +549,7 @@ function renderShifts(){
   const grid=document.getElementById('shift-grid');
   if(!staffList.length){grid.innerHTML='<div style="padding:24px;text-align:center;font-size:13px;color:#aaa;background:#fff;border-radius:10px;border:1px solid var(--r200)">スタッフを追加してください</div>';return;}
 
-  grid.innerHTML=staffList.map(s=>{
+  grid.innerHTML=staffList.map((s,idx)=>{
     const p=getPal(s);
     const daysHtml=DN_ALL.map(dd=>{
       const d=new Date(m);d.setDate(d.getDate()+dd.di);
@@ -597,12 +573,16 @@ function renderShifts(){
         <button class="toggle-btn ${isOff?'is-off':'is-on'}" onclick="toggleOff('${s.id}',${dd.di})">${isOff?'休み':'出勤中'}</button>
       </div>`;
     }).join('');
-    return `<div class="shift-staff-card" id="scard-${s.id}" draggable="true" ondragstart="dragStart(event,'${s.id}')" ondragover="dragOver(event,'${s.id}')" ondragleave="dragLeave(event,'${s.id}')" ondrop="dragDrop(event,'${s.id}')" ondragend="dragEnd()">
+    const isFirst=idx===0;const isLast=idx===staffList.length-1;
+    return `<div class="shift-staff-card" id="scard-${s.id}">
       <div class="shift-staff-hdr">
-        <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+        <div style="display:flex;flex-direction:column;gap:1px;margin-right:4px">
+          <button class="move-btn" onclick="moveStaff('${s.id}',-1)" ${isFirst?'disabled':''} style="opacity:${isFirst?'0.2':'1'}">▲</button>
+          <button class="move-btn" onclick="moveStaff('${s.id}',1)" ${isLast?'disabled':''} style="opacity:${isLast?'0.2':'1'}">▼</button>
+        </div>
         <div style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${s.init}</div>
         <div style="flex:1"><div class="shift-staff-name">${s.name}</div><div class="shift-staff-role">${s.role}</div></div>
-        <button class="shift-del-btn" style="color:#aaa;font-size:12px;margin-right:4px" onclick="openEditStaffModal('${s.id}')">✏</button>
+        <button class="shift-del-btn" style="color:#aaa;font-size:12px;margin-right:6px" onclick="openEditStaffModal('${s.id}')">✏</button>
         <button class="shift-del-btn" onclick="removeStaff('${s.id}')">×</button>
       </div>
       <div class="shift-days-grid">${daysHtml}</div>
@@ -635,11 +615,11 @@ window.removeStaff=function(id){if(!confirm('このスタッフを削除しま�
 
 // ── ダッシュボード ──
 function calcStats(bkList){
-  const count=bkList.length;
-  const uniq=[...new Set(bkList.map(b=>b.name))].length;
-  // 延べ人数：一般予約（個人=1、団体=人数）のみ。イベント・その他は除外
-  const total=bkList.reduce((sum,b)=>{
-    if(b.type==='event'||b.type==='other')return sum;
+  // 予約数・ユニーク利用者・延べ人数はすべて一般予約(user)のみ対象
+  const userList=bkList.filter(b=>b.type==='user');
+  const count=userList.length;
+  const uniq=[...new Set(userList.map(b=>b.name))].length;
+  const total=userList.reduce((sum,b)=>{
     return sum+(b.grp==='group'?(parseInt(b.pax)||0):1);
   },0);
   const rate=Math.round(count/20*100)+'%';
@@ -765,8 +745,8 @@ window.saveStaff=function(){
   } else {
     const name=document.getElementById('s-name').value.trim();if(!name)return;
     const newRef=push(ref(db,'staff'));
-    const maxOrder=Object.values(staff).reduce((mx,s)=>Math.max(mx,(s.order??0)),0);
-    const order=Object.keys(staff).length===0?0:maxOrder+1;
+    const existingList=Object.values(staff);
+    const order=existingList.length===0?0:Math.max(...existingList.map(s=>s.order??0))+1;
     set(newRef,{name,role:document.getElementById('s-role').value,init:name[0],pal:parseInt(document.getElementById('s-color').value),order});
   }
   document.getElementById('modal-staff').classList.remove('open');
