@@ -609,7 +609,6 @@ function renderShifts(){
     editBtn.addEventListener('click',()=>openEditStaffModal(sid));
     const delBtn=cardEl.querySelectorAll('.shift-del-btn')[1];
     delBtn.addEventListener('click',()=>removeStaff(sid));
-    return cardEl;
     grid.appendChild(cardEl);
   });
 }
