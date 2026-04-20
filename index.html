@@ -369,7 +369,7 @@ let editingBkId=null;
 
 function setStatus(msg,cls=''){const el=document.getElementById('status-bar');el.textContent=msg;el.className='status-bar '+cls;}
 function monday(off){const n=new Date();const day=n.getDay();const base=n.getDate()-day+(day===0?-6:1);const m=new Date(n);m.setDate(base+off*7);m.setHours(0,0,0,0);return m;}
-function dateStr(off,di){const m=monday(off);const d=new Date(m);d.setDate(d.getDate()+di);return d.toISOString().split('T')[0];}
+function dateStr(off,di){const m=monday(off);const d=new Date(m);d.setDate(d.getDate()+di);const y=d.getFullYear();const mo=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return y+'-'+mo+'-'+dd;}
 function fmt(d){return (d.getMonth()+1)+'/'+d.getDate();}
 function minToStr(m){const h=Math.floor(m/60),mi=m%60;return h+':'+(mi===0?'00':'30');}
 function strToMin(s){const[h,mi]=s.split(':').map(Number);return h*60+mi;}
