@@ -423,12 +423,29 @@ function renderCalendar(){
       const ds=dateStr(calWeekOff,dd.di);
       const td=document.createElement('td');td.className='dcell';
       if(dd.sat)td.classList.add('sat-col');if(dd.sun)td.classList.add('sun-col');
+      // 開始セル：バー＋名前ラベル
       const bk=Object.values(bookings).find(b=>b.date===ds&&b.start===slot);
+      // 継続中セル：開始より後で終了より前のスロット
+      const bkCont=!bk?Object.values(bookings).find(b=>{
+        if(b.date!==ds)return false;
+        const sm=slotMin(slot),bStart=slotMin(b.start),bEnd=slotMin(b.end);
+        return sm>bStart&&sm<bEnd;
+      }):null;
       if(bk){
         const c=bkc(bk);td.style.background=c.cell;
         const bar=document.createElement('div');bar.className='bbar';bar.style.background=c.bar;
+        // 終了時刻のスロット数を計算してborderRadiusを制御
+        bar.style.borderRadius='3px 3px 0 0';
         bar.textContent=(bk.type==='event'?'[E] ':bk.grp==='group'?'[団'+bk.pax+'名] ':'')+bk.name;
         td.appendChild(bar);td.onclick=()=>openBkModal(bk.id);
+      } else if(bkCont){
+        const c=bkc(bkCont);td.style.background=c.cell;
+        const bEnd=slotMin(bkCont.end);const nextSlotIdx=SLOTS.indexOf(slot)+1;
+        const isLast=nextSlotIdx>=SLOTS.length||slotMin(SLOTS[nextSlotIdx])>=bEnd;
+        const bar=document.createElement('div');bar.className='bbar';bar.style.background=c.bar;
+        bar.style.borderRadius=isLast?'0 0 3px 3px':'0';
+        bar.style.top='0';bar.style.bottom='0';
+        td.appendChild(bar);td.onclick=()=>openBkModal(bkCont.id);
       } else {
         const onNow=staffAtSlot(dd.di,slot,calWeekOff);
         if(onNow.length){const cw=100/onNow.length;onNow.forEach((s,i)=>{const p=getPal(s);const sh=document.createElement('div');sh.className='staff-shade';sh.style.cssText=`left:${i*cw}%;width:${cw}%;background:${p.shade};border-left:1.5px solid ${p.bg}`;td.appendChild(sh);});}
