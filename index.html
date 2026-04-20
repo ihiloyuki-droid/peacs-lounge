@@ -2,127 +2,168 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Peacs Lounge 管理表</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--r900:#5C1210;--r800:#8B2318;--r600:#B23A33;--r400:#CC5B55;--r200:#F0B8B5;--r100:#FAE8E7;--r50:#FDF5F5}
 body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;color:#1a1a1a;font-size:14px;background:#f5f5f5;min-height:100vh}
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--r800);position:sticky;top:0;z-index:20}
-.hdr-l{display:flex;align-items:center;gap:10px}
-.logo{width:30px;height:30px;background:var(--r50);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--r800)}
-.hdr-title{font-size:14px;font-weight:600;color:#fff;letter-spacing:.04em}
-.hdr-sub{font-size:10px;color:var(--r200);margin-top:1px}
-.hdr-date{font-size:11px;color:var(--r200);background:var(--r900);padding:3px 10px;border-radius:20px}
-.tabs{display:flex;background:#fff;border-bottom:2px solid var(--r100);position:sticky;top:55px;z-index:19}
-.tab{padding:9px 16px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
-.tab.active{color:var(--r800);font-weight:600;border-bottom-color:var(--r600)}
-.tab:hover:not(.active){color:var(--r600)}
-.content{padding:14px 18px;max-width:1100px;margin:0 auto}
-.view{display:none}.view.active{display:block}
-.wnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.wlbl{font-size:13px;font-weight:600}
-.nbns{display:flex;gap:5px}
-.nbn{padding:4px 11px;border:1px solid var(--r200);border-radius:6px;cursor:pointer;font-size:11px;background:#fff;color:var(--r800);transition:all .15s}
-.nbn:hover{background:var(--r50)}
-.lgrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:9px;align-items:center}
-.lgi{display:flex;align-items:center;gap:4px;font-size:10px;color:#666}
-.lgd{width:10px;height:10px;border-radius:2px}
 
-/* カレンダー */
+/* ヘッダー */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--r800);position:sticky;top:0;z-index:20}
+.hdr-l{display:flex;align-items:center;gap:8px}
+.logo{width:28px;height:28px;background:var(--r50);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--r800);flex-shrink:0}
+.hdr-title{font-size:13px;font-weight:600;color:#fff;letter-spacing:.03em}
+.hdr-sub{font-size:9px;color:var(--r200);margin-top:1px}
+.hdr-date{font-size:10px;color:var(--r200);background:var(--r900);padding:3px 8px;border-radius:20px;white-space:nowrap}
+
+/* タブ */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--r100);position:sticky;top:49px;z-index:19;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 14px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.tab.active{color:var(--r800);font-weight:600;border-bottom-color:var(--r600)}
+
+/* コンテンツ */
+.content{padding:12px 14px}
+.view{display:none}.view.active{display:block}
+
+/* ナビ */
+.wnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.wlbl{font-size:13px;font-weight:600;white-space:nowrap}
+.nbns{display:flex;gap:4px}
+.nbn{padding:6px 10px;border:1px solid var(--r200);border-radius:6px;cursor:pointer;font-size:11px;background:#fff;color:var(--r800);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.nbn:active{background:var(--r50)}
+
+/* レジェンド */
+.lgrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.lgi{display:flex;align-items:center;gap:3px;font-size:10px;color:#666}
+.lgd{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ─── カレンダー ─── */
 .calwrap{border:1px solid var(--r200);border-radius:9px;overflow:hidden;background:#fff}
 .cal-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.cal-table col.c-time{width:52px}
-.cal-hdr-time{background:var(--r50);border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);font-size:9px;color:var(--r600);text-align:center;padding:4px 2px;vertical-align:middle}
+.cal-table col.c-time{width:36px}
+.cal-hdr-time{background:var(--r50);border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);font-size:8px;color:var(--r600);text-align:center;padding:3px 1px;vertical-align:middle}
 .cal-th{border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);padding:0;vertical-align:top}
 .cal-th:last-child{border-right:none}
-.day-hdr{padding:5px 3px;text-align:center}
-.dhn{font-size:11px;font-weight:600}
-.dhd{font-size:10px;margin-top:1px}
+.day-hdr{padding:4px 2px;text-align:center}
+.dhn{font-size:10px;font-weight:700}
+.dhd{font-size:9px;margin-top:1px}
 .dhd.tod{font-weight:700}
-.staff-strip{padding:3px;display:flex;flex-wrap:wrap;gap:2px;border-top:1px solid var(--r100);background:#fff;min-height:22px}
-.schip{display:flex;align-items:center;gap:2px;border-radius:8px;padding:1px 4px;font-size:8px;font-weight:600;white-space:nowrap}
-.calvbody-wrap{overflow-y:auto;max-height:320px}
-.cal-time-lbl{background:#fff;font-size:9px;color:#aaa;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);text-align:center;padding:2px 1px 0;vertical-align:top;height:22px}
-.dcell{height:22px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);cursor:pointer;transition:background .1s;position:relative;overflow:hidden;padding:0}
+.staff-strip{padding:2px;display:flex;flex-wrap:wrap;gap:1px;border-top:1px solid var(--r100);background:#fff;min-height:18px}
+.schip{display:flex;align-items:center;gap:1px;border-radius:6px;padding:1px 3px;font-size:7px;font-weight:600;white-space:nowrap}
+.calvbody-wrap{overflow-y:auto;max-height:calc(100vh - 280px);-webkit-overflow-scrolling:touch}
+.cal-time-lbl{background:#fff;font-size:8px;color:#aaa;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);text-align:center;padding:1px 0;vertical-align:top;height:24px}
+.dcell{height:24px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);cursor:pointer;position:relative;overflow:hidden;padding:0;-webkit-tap-highlight-color:transparent}
 .dcell:last-child{border-right:none}
-.dcell:hover{background:var(--r50)}
-.dcell.sat-col{background:#EBF3FC}.dcell.sat-col:hover{background:#dbeeff}
-.dcell.sun-col{background:#FFF5F5}.dcell.sun-col:hover{background:#ffe8e7}
-.bbar{position:absolute;inset:1px;border-radius:2px;padding:1px 3px;font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;color:#fff}
+.dcell:active{background:var(--r50)}
+.dcell.sat-col{background:#EBF3FC}
+.dcell.sun-col{background:#FFF5F5}
+.bbar{position:absolute;inset:1px;border-radius:2px;padding:1px 2px;font-size:7px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none;color:#fff}
 .staff-shade{position:absolute;inset:0;pointer-events:none}
 
-/* 予約一覧 */
+/* ─── 予約一覧 ─── */
 .lcard{border:1px solid var(--r200);border-radius:9px;overflow:hidden;margin-bottom:12px;background:#fff}
-.lrow{display:flex;align-items:center;padding:9px 13px;border-bottom:1px solid var(--r100);gap:8px}
+.lrow{display:flex;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--r100);gap:8px;flex-wrap:wrap}
 .lrow:last-child{border-bottom:none}
-.lrow:hover{background:var(--r50)}
-.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .rm{flex:1;min-width:0}
-.rn{font-size:12px;font-weight:600}
-.rs{font-size:10px;color:#888;margin-top:1px}
-.bdg{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.rn{font-size:13px;font-weight:600}
+.rs{font-size:10px;color:#888;margin-top:2px;line-height:1.4}
+.row-badges{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:6px}
+.row-actions{display:flex;gap:4px;align-items:center}
+.bdg{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600}
 .b-ok{background:#EAF3DE;color:#27500A}
 .b-warn{background:#FAEEDA;color:#633806}
 .b-ind{background:#EAF3DE;color:#27500A}
 .b-grp{background:#E6F1FB;color:#0C447C}
 .b-evt{background:#FAEEDA;color:#633806}
-.icon-btn{cursor:pointer;padding:3px 6px;border-radius:4px;font-size:12px;color:#ccc;transition:all .15s;border:none;background:transparent}
-.icon-btn:hover{background:var(--r100);color:var(--r800)}
+.icon-btn{cursor:pointer;padding:6px 10px;border-radius:6px;font-size:13px;color:#aaa;border:1px solid var(--r100);background:#fff;-webkit-tap-highlight-color:transparent}
+.icon-btn:active{background:var(--r50)}
 
-/* シフト管理 — セレクトボックス方式 */
-.shift-wrap{border:1px solid var(--r200);border-radius:9px;overflow:hidden;background:#fff}
-.shift-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.shift-table col.sc-name{width:110px}
-.sh-th{padding:7px 6px;font-size:10px;font-weight:700;border-right:1px solid var(--r200);border-bottom:1px solid var(--r200);text-align:center;vertical-align:middle}
-.sh-th:last-child{border-right:none}
-.sh-name-cell{padding:8px 10px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);vertical-align:middle;background:#fffcfc}
-.sh-cell{padding:5px 4px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100);vertical-align:middle}
-.sh-cell:last-child{border-right:none}
-.sh-cell.sat-bg{background:#f0f6fc}
-.sh-cell.sun-bg{background:#fff8f8}
-.time-selects{display:flex;align-items:center;gap:3px;flex-wrap:nowrap}
-.time-sel{flex:1;min-width:0;padding:4px 2px;border:1px solid var(--r200);border-radius:5px;font-size:10px;color:#1a1a1a;background:#fff;cursor:pointer;text-align:center}
+/* ─── シフト管理（モバイル最適化） ─── */
+.shift-staff-card{background:#fff;border:1px solid var(--r200);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.shift-staff-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--r50);border-bottom:1px solid var(--r100)}
+.shift-staff-name{font-size:13px;font-weight:600;flex:1}
+.shift-staff-role{font-size:10px;color:#aaa}
+.shift-days-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.shift-day-cell{padding:10px 12px;border-right:1px solid var(--r100);border-bottom:1px solid var(--r100)}
+.shift-day-cell:nth-child(2n){border-right:none}
+.shift-day-cell:nth-last-child(-n+2){border-bottom:none}
+.shift-day-cell.sat-bg{background:#f0f6fc}
+.shift-day-cell.sun-bg{background:#fff8f8}
+.shift-day-label{font-size:11px;font-weight:700;margin-bottom:6px}
+.shift-day-date{font-size:10px;color:#aaa;font-weight:400;margin-left:4px}
+.shift-time-row{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.time-sel{flex:1;min-width:0;padding:7px 4px;border:1px solid var(--r200);border-radius:6px;font-size:12px;color:#1a1a1a;background:#fff;text-align:center;-webkit-appearance:none;appearance:none;cursor:pointer}
+.time-sel:disabled{background:#f5f5f5;color:#ccc}
 .time-sel:focus{outline:none;border-color:var(--r400)}
-.time-sel:disabled{background:#f5f5f5;color:#bbb;cursor:default}
-.time-sep{font-size:10px;color:#aaa;flex-shrink:0}
-.off-btn{padding:3px 7px;border-radius:4px;font-size:9px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.off-btn.is-off{background:#D3D1C7;color:#555}
-.off-btn.is-on{background:var(--r100);color:var(--r800)}
-.off-btn:hover{opacity:.8}
-.shift-label{font-size:9px;font-weight:600;color:#aaa;text-align:center;margin-bottom:2px}
+.time-sep{font-size:11px;color:#aaa;flex-shrink:0}
+.toggle-btn{width:100%;padding:7px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.toggle-btn.is-off{background:#f0f0f0;color:#888}
+.toggle-btn.is-on{background:var(--r100);color:var(--r800)}
+.toggle-btn:active{opacity:.8}
+.shift-del-btn{background:none;border:none;color:#ddd;font-size:14px;cursor:pointer;padding:0 4px}
 
-/* ダッシュボード */
-.srow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+/* ─── ダッシュボード ─── */
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .sc{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--r100)}
-.scl{font-size:10px;color:var(--r600);margin-bottom:4px}
+.scl{font-size:10px;color:var(--r600);margin-bottom:4px;line-height:1.3}
 .scv{font-size:22px;font-weight:700;color:var(--r800)}
-.twoc{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.twoc{display:flex;flex-direction:column;gap:12px}
 .stitle{font-size:12px;font-weight:600;margin-bottom:9px;color:#444}
-.addbtn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--r200);border-radius:6px;cursor:pointer;font-size:11px;background:#fff;color:var(--r800);transition:all .15s}
-.addbtn:hover{background:var(--r50)}
+.dash-row{display:flex;align-items:center;padding:9px 12px;border-bottom:1px solid var(--r100);gap:8px}
+.dash-row:last-child{border-bottom:none}
 
-/* モーダル */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.22);z-index:100;align-items:center;justify-content:center}
+/* ─── ボタン類 ─── */
+.addbtn{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border:1px solid var(--r200);border-radius:8px;cursor:pointer;font-size:12px;background:#fff;color:var(--r800);-webkit-tap-highlight-color:transparent}
+.addbtn:active{background:var(--r50)}
+.add-bk-fab{position:fixed;bottom:20px;right:16px;width:52px;height:52px;background:var(--r600);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 4px 14px rgba(178,58,51,.4);z-index:10;-webkit-tap-highlight-color:transparent;border:none}
+.add-bk-fab:active{background:var(--r800)}
+
+/* ─── モーダル ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:100;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:12px;border:1px solid var(--r200);padding:20px;width:370px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
-.mtitle{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--r800)}
-.flbl{font-size:10px;color:#888;margin-bottom:3px;display:block}
-.fg{margin-bottom:10px}
-.fi{width:100%;padding:7px 10px;border:1px solid var(--r200);border-radius:7px;font-size:12px;color:#1a1a1a;background:#fff}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:20px 18px 32px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media(min-width:600px){
+  .modal-overlay{align-items:center}
+  .modal{border-radius:14px;width:400px;max-height:85vh;margin:0 auto}
+}
+.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
+.mtitle{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--r800)}
+.flbl{font-size:11px;color:#888;margin-bottom:4px;display:block}
+.fg{margin-bottom:12px}
+.fi{width:100%;padding:10px 12px;border:1px solid var(--r200);border-radius:8px;font-size:14px;color:#1a1a1a;background:#fff;-webkit-appearance:none;appearance:none}
 .fi:focus{outline:none;border-color:var(--r400)}
-.mact{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
-.btp{padding:7px 16px;background:var(--r600);color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600}
-.btp:hover{background:var(--r800)}
-.bts{padding:7px 13px;background:transparent;color:#888;border:1px solid var(--r200);border-radius:7px;font-size:12px;cursor:pointer}
-.radio-row{display:flex;gap:10px}
-.radio-opt{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;padding:5px 10px;border:1px solid var(--r200);border-radius:6px;transition:all .15s}
-.radio-opt:hover{background:var(--r50)}
+.mact{display:flex;gap:8px;margin-top:16px}
+.btp{flex:1;padding:12px;background:var(--r600);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+.btp:active{background:var(--r800)}
+.bts{padding:12px 16px;background:transparent;color:#888;border:1px solid var(--r200);border-radius:8px;font-size:14px;cursor:pointer}
+.radio-row{display:flex;gap:8px}
+.radio-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:13px;padding:10px;border:1px solid var(--r200);border-radius:8px}
 .radio-opt input{accent-color:var(--r600)}
-.status-bar{font-size:10px;text-align:right;padding:4px 0;min-height:18px;color:#aaa}
+
+/* ステータス */
+.status-bar{font-size:10px;text-align:right;padding:3px 0;min-height:16px;color:#aaa}
 .status-bar.saving{color:#BA7517}
 .status-bar.saved{color:#3B6D11}
 .status-bar.err{color:var(--r600)}
+
+/* PC向け調整 */
+@media(min-width:768px){
+  .content{padding:14px 20px;max-width:1100px;margin:0 auto}
+  .srow{grid-template-columns:repeat(5,1fr)}
+  .twoc{flex-direction:row}
+  .twoc > div{flex:1}
+  .shift-days-grid{grid-template-columns:repeat(7,1fr)}
+  .shift-day-cell:nth-child(2n){border-right:1px solid var(--r100)}
+  .shift-day-cell:nth-child(7n){border-right:none}
+  .shift-day-cell:nth-last-child(-n+2){border-bottom:1px solid var(--r100)}
+  .shift-day-cell:nth-last-child(-n+7):nth-child(7n+1),.shift-day-cell:nth-last-child(-n+7):nth-child(7n+2),.shift-day-cell:nth-last-child(-n+7):nth-child(7n+3),.shift-day-cell:nth-last-child(-n+7):nth-child(7n+4),.shift-day-cell:nth-last-child(-n+7):nth-child(7n+5),.shift-day-cell:nth-last-child(-n+7):nth-child(7n+6),.shift-day-cell:nth-last-child(1){border-bottom:none}
+  .add-bk-fab{display:none}
+  .lrow{flex-wrap:nowrap;align-items:center}
+  .row-badges{margin-top:0}
+}
 </style>
 </head>
 <body>
@@ -130,7 +171,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 <div class="hdr">
   <div class="hdr-l">
     <div class="logo">PL</div>
-    <div><div class="hdr-title">Peacs Lounge 管理表</div><div class="hdr-sub">予約・シフト管理システム</div></div>
+    <div>
+      <div class="hdr-title">Peacs Lounge 管理表</div>
+      <div class="hdr-sub">予約・シフト管理システム</div>
+    </div>
   </div>
   <div class="hdr-date" id="hdr-date"></div>
 </div>
@@ -156,12 +200,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
       </div>
     </div>
     <div class="lgrow">
-      <div class="lgi"><div class="lgd" style="background:#63A826"></div> 一般（個人）</div>
-      <div class="lgi"><div class="lgd" style="background:#2E86DE"></div> 一般（団体）</div>
-      <div class="lgi"><div class="lgd" style="background:#F0A500"></div> イベント</div>
-      <div class="lgi"><div style="display:flex;gap:1px"><div style="width:5px;height:10px;border-radius:1px;background:#EF9F27"></div><div style="width:5px;height:10px;border-radius:1px;background:#5DCAA5"></div></div> スタッフ勤務</div>
-      <div class="lgi"><div class="lgd" style="background:#B5D4F4"></div> 土</div>
-      <div class="lgi"><div class="lgd" style="background:#FAE8E7"></div> 日</div>
+      <div class="lgi"><div class="lgd" style="background:#63A826"></div>個人</div>
+      <div class="lgi"><div class="lgd" style="background:#2E86DE"></div>団体</div>
+      <div class="lgi"><div class="lgd" style="background:#F0A500"></div>イベント</div>
+      <div class="lgi"><div class="lgd" style="background:#B5D4F4"></div>土</div>
+      <div class="lgi"><div class="lgd" style="background:#FAE8E7"></div>日</div>
     </div>
     <div class="calwrap" id="cal-outer"></div>
   </div>
@@ -173,13 +216,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
       <div class="addbtn" onclick="openBkModal(null)">+ 新規予約</div>
     </div>
     <div class="lcard" id="bk-list"></div>
+    <button class="add-bk-fab" onclick="openBkModal(null)">+</button>
   </div>
 
   <!-- シフト管理 -->
   <div class="view" id="view-shifts">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="stitle" style="margin:0">スタッフシフト</div>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <div class="addbtn" onclick="openStaffModal()">+ スタッフ追加</div>
         <div class="nbns">
           <div class="nbn" onclick="wk(-1,'shift')">← 前週</div>
@@ -188,8 +232,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
         </div>
       </div>
     </div>
-    <div class="wlbl" id="shift-wlbl" style="font-size:12px;color:#888;margin-bottom:10px"></div>
-    <div class="shift-wrap" id="shift-grid"></div>
+    <div style="font-size:12px;color:#888;margin-bottom:10px" id="shift-wlbl"></div>
+    <div id="shift-grid"></div>
   </div>
 
   <!-- ダッシュボード -->
@@ -211,6 +255,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 <!-- 予約モーダル -->
 <div class="modal-overlay" id="modal-bk" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
+    <div class="modal-handle"></div>
     <div class="mtitle" id="bk-mtitle">予約を追加</div>
     <div class="fg"><label class="flbl">種別</label>
       <select class="fi" id="i-type" onchange="onTypeChange()">
@@ -224,7 +269,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
           <label class="radio-opt"><input type="radio" name="grp" value="group" onchange="onGrpChange()"> 団体</label>
         </div>
       </div>
-      <div class="fg" id="pax-section" style="display:none"><label class="flbl">人数</label><input class="fi" id="i-pax" type="number" min="2" max="500" placeholder="例：15"></div>
+      <div class="fg" id="pax-section" style="display:none">
+        <label class="flbl">人数</label>
+        <input class="fi" id="i-pax" type="number" min="2" max="500" placeholder="例：15">
+      </div>
     </div>
     <div class="fg"><label class="flbl">利用者名 / イベント名</label><input class="fi" id="i-name" type="text" placeholder="山田 太郎"></div>
     <div class="fg"><label class="flbl">スペース</label>
@@ -235,23 +283,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
       </select>
     </div>
     <div class="fg"><label class="flbl">日付</label><input class="fi" id="i-date" type="date"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="fg"><label class="flbl">開始</label><select class="fi" id="i-start"></select></div>
       <div class="fg"><label class="flbl">終了</label><select class="fi" id="i-end"></select></div>
     </div>
     <div class="fg"><label class="flbl">ステータス</label>
-      <select class="fi" id="i-status"><option value="仮予約">仮予約</option><option value="確認済み">確認済み</option></select>
+      <select class="fi" id="i-status">
+        <option value="仮予約">仮予約</option><option value="確認済み">確認済み</option>
+      </select>
     </div>
     <div class="mact">
       <div class="bts" onclick="document.getElementById('modal-bk').classList.remove('open')">キャンセル</div>
-      <div class="btp" onclick="saveBk()">保存する</div>
+      <button class="btp" onclick="saveBk()">保存する</button>
     </div>
   </div>
 </div>
 
 <!-- スタッフモーダル -->
 <div class="modal-overlay" id="modal-staff" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="width:320px">
+  <div class="modal">
+    <div class="modal-handle"></div>
     <div class="mtitle">スタッフを追加</div>
     <div class="fg"><label class="flbl">氏名</label><input class="fi" id="s-name" type="text" placeholder="例：山本 花子"></div>
     <div class="fg"><label class="flbl">役職</label>
@@ -266,7 +317,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
     </div>
     <div class="mact">
       <div class="bts" onclick="document.getElementById('modal-staff').classList.remove('open')">キャンセル</div>
-      <div class="btp" onclick="saveStaff()">追加する</div>
+      <button class="btp" onclick="saveStaff()">追加する</button>
     </div>
   </div>
 </div>
@@ -288,7 +339,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ── 定数 ──
 const PALETTES = [
   {bg:'#EF9F27',tc:'#633806',shade:'rgba(239,159,39,0.12)'},
   {bg:'#5DCAA5',tc:'#085041',shade:'rgba(93,202,165,0.12)'},
@@ -303,156 +353,86 @@ const DN_ALL = [
   {label:'金',di:4,sat:false,sun:false},{label:'土',di:5,sat:true,sun:false},
   {label:'日',di:6,sat:false,sun:true}
 ];
-const SLOTS = [];
+const SLOTS=[];
 for(let h=8;h<24;h++){SLOTS.push(h+':00');SLOTS.push(h+':30')}
-
-// 30分単位の時刻オプション（8:00〜24:00）
-const TIME_OPTS = [];
-for(let h=8;h<=24;h++){
-  TIME_OPTS.push(h+':00');
-  if(h<24) TIME_OPTS.push(h+':30');
-}
-
-const BK = {
+const TIME_OPTS=[];
+for(let h=8;h<=24;h++){TIME_OPTS.push(h+':00');if(h<24)TIME_OPTS.push(h+':30')}
+const BK={
   ind:{bar:'#63A826',cell:'#EAF3DE',avBg:'#EAF3DE',avTc:'#27500A'},
   grp:{bar:'#2E86DE',cell:'#E6F1FB',avBg:'#E6F1FB',avTc:'#0C447C'},
   evt:{bar:'#F0A500',cell:'#FAEEDA',avBg:'#FAEEDA',avTc:'#633806'},
 };
 
-// ── 状態 ──
-let staff = {}, bookings = {}, shiftMap = {};
-let calWeekOff = 0, shiftWeekOff = 0;
-let editingBkId = null;
+let staff={}, bookings={}, shiftMap={};
+let calWeekOff=0, shiftWeekOff=0;
+let editingBkId=null;
 
-// ── ユーティリティ ──
-function setStatus(msg, cls='') {
-  const el = document.getElementById('status-bar');
-  el.textContent = msg; el.className = 'status-bar ' + cls;
-}
-function monday(off) {
-  const n = new Date(); const day = n.getDay();
-  const base = n.getDate() - day + (day===0 ? -6 : 1);
-  const m = new Date(n); m.setDate(base + off*7); m.setHours(0,0,0,0); return m;
-}
-function dateStr(off, di) {
-  const m = monday(off); const d = new Date(m); d.setDate(d.getDate()+di);
-  return d.toISOString().split('T')[0];
-}
-function fmt(d) { return (d.getMonth()+1)+'/'+d.getDate(); }
-function minToStr(m) { const h=Math.floor(m/60),mi=m%60; return h+':'+(mi===0?'00':'30'); }
-function strToMin(s) { const[h,mi]=s.split(':').map(Number); return h*60+mi; }
-function isToday(d) { const t=new Date(); return d.toDateString()===t.toDateString(); }
-function slotMin(s) { const[h,mi]=s.split(':').map(Number); return h*60+mi; }
-function getPal(s) { return PALETTES[(s.pal||0) % PALETTES.length]; }
-function bkc(b) { return b.type==='event' ? BK.evt : b.grp==='group' ? BK.grp : BK.ind; }
-function getShift(sid, di, off) {
-  const wo = off !== undefined ? off : shiftWeekOff;
-  return ((shiftMap[sid]||{})[wo+'_'+di]) || null;
-}
-function staffAtSlot(di, slot, off) {
-  const sm = slotMin(slot);
-  return Object.values(staff).filter(s => {
-    const r = getShift(s.id, di, off);
-    return r && sm >= r[0] && sm < r[1];
-  });
-}
+function setStatus(msg,cls=''){const el=document.getElementById('status-bar');el.textContent=msg;el.className='status-bar '+cls;}
+function monday(off){const n=new Date();const day=n.getDay();const base=n.getDate()-day+(day===0?-6:1);const m=new Date(n);m.setDate(base+off*7);m.setHours(0,0,0,0);return m;}
+function dateStr(off,di){const m=monday(off);const d=new Date(m);d.setDate(d.getDate()+di);return d.toISOString().split('T')[0];}
+function fmt(d){return (d.getMonth()+1)+'/'+d.getDate();}
+function minToStr(m){const h=Math.floor(m/60),mi=m%60;return h+':'+(mi===0?'00':'30');}
+function strToMin(s){const[h,mi]=s.split(':').map(Number);return h*60+mi;}
+function isToday(d){const t=new Date();return d.toDateString()===t.toDateString();}
+function slotMin(s){const[h,mi]=s.split(':').map(Number);return h*60+mi;}
+function getPal(s){return PALETTES[(s.pal||0)%PALETTES.length];}
+function bkc(b){return b.type==='event'?BK.evt:b.grp==='group'?BK.grp:BK.ind;}
+function getShift(sid,di,off){const wo=off!==undefined?off:shiftWeekOff;return((shiftMap[sid]||{})[wo+'_'+di])||null;}
+function staffAtSlot(di,slot,off){const sm=slotMin(slot);return Object.values(staff).filter(s=>{const r=getShift(s.id,di,off);return r&&sm>=r[0]&&sm<r[1]});}
 
-// ── Firebase リアルタイム同期 ──
-onValue(ref(db,'staff'), snap => {
-  staff = {};
-  snap.forEach(c => { staff[c.key] = {id:c.key, ...c.val()}; });
-  renderAll();
-  setStatus('同期済み — '+new Date().toLocaleTimeString('ja-JP'), 'saved');
-});
-onValue(ref(db,'bookings'), snap => {
-  bookings = {};
-  snap.forEach(c => { bookings[c.key] = {id:c.key, ...c.val()}; });
-  renderAll();
-});
-onValue(ref(db,'shifts'), snap => {
-  shiftMap = {};
-  snap.forEach(sid => {
-    shiftMap[sid.key] = {};
-    sid.forEach(e => { shiftMap[sid.key][e.key] = e.val(); });
-  });
-  renderAll();
-});
+onValue(ref(db,'staff'),snap=>{staff={};snap.forEach(c=>{staff[c.key]={id:c.key,...c.val()};});renderAll();setStatus('同期済み — '+new Date().toLocaleTimeString('ja-JP'),'saved');});
+onValue(ref(db,'bookings'),snap=>{bookings={};snap.forEach(c=>{bookings[c.key]={id:c.key,...c.val()};});renderAll();});
+onValue(ref(db,'shifts'),snap=>{shiftMap={};snap.forEach(sid=>{shiftMap[sid.key]={};sid.forEach(e=>{shiftMap[sid.key][e.key]=e.val();});});renderAll();});
 
-function renderAll() {
-  renderCalendar();
-  renderBookings();
-  renderShifts();
-  renderDashboard();
-}
+function renderAll(){renderCalendar();renderBookings();renderShifts();renderDashboard();}
 
-// ── タブ / 週ナビ ──
-window.sw = function(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['calendar','bookings','shifts','dashboard'][i]===tab);
-  });
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+window.sw=function(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['calendar','bookings','shifts','dashboard'][i]===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+tab).classList.add('active');
 };
-window.wk = function(d, target) {
-  if(target==='cal') calWeekOff = d===0 ? 0 : calWeekOff+d;
-  else shiftWeekOff = d===0 ? 0 : shiftWeekOff+d;
+window.wk=function(d,target){
+  if(target==='cal') calWeekOff=d===0?0:calWeekOff+d;
+  else shiftWeekOff=d===0?0:shiftWeekOff+d;
   renderAll();
 };
 
 // ── カレンダー ──
-function renderCalendar() {
-  const m = monday(calWeekOff);
-  document.getElementById('cal-wlbl').textContent = m.getFullYear()+'年'+(m.getMonth()+1)+'月';
-  const outer = document.getElementById('cal-outer');
-
-  let html = `<table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><thead><tr>`;
-  html += `<th class="cal-hdr-time">時刻</th>`;
-  DN_ALL.forEach(dd => {
-    const d = new Date(m); d.setDate(d.getDate()+dd.di);
-    const tod = isToday(d);
-    const nc = dd.sat?'#185FA5':dd.sun?'#B23A33':'#8B2318';
-    const dc = dd.sat?'#378ADD':dd.sun?'#CC5B55':'#B23A33';
-    const bg = dd.sat?'background:#EBF3FC':dd.sun?'background:#FFF5F5':'background:#FDF5F5';
-    const onDuty = Object.values(staff).map(s => {
-      const r = getShift(s.id, dd.di, calWeekOff);
-      if(!r) return null;
-      const p = getPal(s);
-      return `<div class="schip" style="background:${p.shade};border:1px solid ${p.bg}"><div style="width:11px;height:11px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700">${s.init}</div><span style="color:${p.tc}">${s.name.split(' ')[0]} ${minToStr(r[0])}〜${r[1]===24*60?'24:00':minToStr(r[1])}</span></div>`;
-    }).filter(Boolean).join('');
-    html += `<th class="cal-th" style="${bg}"><div class="day-hdr"><div class="dhn" style="color:${nc}">${dd.label}</div><div class="dhd${tod?' tod':''}" style="color:${dc}">${fmt(d)}${tod?' 今日':''}</div></div><div class="staff-strip">${onDuty||'<span style="font-size:8px;color:#ccc">未設定</span>'}</div></th>`;
+function renderCalendar(){
+  const m=monday(calWeekOff);
+  document.getElementById('cal-wlbl').textContent=m.getFullYear()+'年'+(m.getMonth()+1)+'月';
+  const outer=document.getElementById('cal-outer');
+  let html=`<table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><thead><tr>`;
+  html+=`<th class="cal-hdr-time">時刻</th>`;
+  DN_ALL.forEach(dd=>{
+    const d=new Date(m);d.setDate(d.getDate()+dd.di);
+    const tod=isToday(d);
+    const nc=dd.sat?'#185FA5':dd.sun?'#B23A33':'#8B2318';
+    const dc=dd.sat?'#378ADD':dd.sun?'#CC5B55':'#B23A33';
+    const bg=dd.sat?'background:#EBF3FC':dd.sun?'background:#FFF5F5':'background:#FDF5F5';
+    const onDuty=Object.values(staff).map(s=>{const r=getShift(s.id,dd.di,calWeekOff);if(!r)return null;const p=getPal(s);return `<div class="schip" style="background:${p.shade};border:1px solid ${p.bg}"><div style="width:9px;height:9px;border-radius:50%;background:${p.bg};flex-shrink:0"></div><span style="color:${p.tc}">${s.name.split(' ')[0]} ${minToStr(r[0])}〜${r[1]===24*60?'24:00':minToStr(r[1])}</span></div>`;}).filter(Boolean).join('');
+    html+=`<th class="cal-th" style="${bg}"><div class="day-hdr"><div class="dhn" style="color:${nc}">${dd.label}</div><div class="dhd${tod?' tod':''}" style="color:${dc}">${fmt(d)}${tod?' 今':''}</div></div><div class="staff-strip">${onDuty||'<span style="font-size:7px;color:#ccc">未設定</span>'}</div></th>`;
   });
-  html += `</tr></thead></table>`;
-  html += `<div class="calvbody-wrap"><table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><tbody id="cal-tbody"></tbody></table></div>`;
-  outer.innerHTML = html;
-
-  const tbody = document.getElementById('cal-tbody');
-  SLOTS.forEach(slot => {
-    const tr = document.createElement('tr');
-    const td0 = document.createElement('td');
-    td0.className='cal-time-lbl'; td0.textContent = slot.endsWith(':00') ? slot : '';
-    tr.appendChild(td0);
-    DN_ALL.forEach(dd => {
-      const ds = dateStr(calWeekOff, dd.di);
-      const td = document.createElement('td'); td.className='dcell';
-      if(dd.sat) td.classList.add('sat-col');
-      if(dd.sun) td.classList.add('sun-col');
-      const bk = Object.values(bookings).find(b => b.date===ds && b.start===slot);
-      if(bk) {
-        const c = bkc(bk); td.style.background = c.cell;
-        const bar = document.createElement('div'); bar.className='bbar'; bar.style.background=c.bar;
-        bar.textContent = (bk.type==='event'?'[E] ':bk.grp==='group'?'[団'+bk.pax+'名] ':'')+bk.name+' '+bk.space;
-        td.appendChild(bar); td.onclick = () => openBkModal(bk.id);
+  html+=`</tr></thead></table><div class="calvbody-wrap"><table class="cal-table"><colgroup><col class="c-time">${DN_ALL.map(()=>'<col>').join('')}</colgroup><tbody id="cal-tbody"></tbody></table></div>`;
+  outer.innerHTML=html;
+  const tbody=document.getElementById('cal-tbody');
+  SLOTS.forEach(slot=>{
+    const tr=document.createElement('tr');
+    const td0=document.createElement('td');td0.className='cal-time-lbl';td0.textContent=slot.endsWith(':00')?slot:'';tr.appendChild(td0);
+    DN_ALL.forEach(dd=>{
+      const ds=dateStr(calWeekOff,dd.di);
+      const td=document.createElement('td');td.className='dcell';
+      if(dd.sat)td.classList.add('sat-col');if(dd.sun)td.classList.add('sun-col');
+      const bk=Object.values(bookings).find(b=>b.date===ds&&b.start===slot);
+      if(bk){
+        const c=bkc(bk);td.style.background=c.cell;
+        const bar=document.createElement('div');bar.className='bbar';bar.style.background=c.bar;
+        bar.textContent=(bk.type==='event'?'[E] ':bk.grp==='group'?'[団'+bk.pax+'名] ':'')+bk.name;
+        td.appendChild(bar);td.onclick=()=>openBkModal(bk.id);
       } else {
-        const onNow = staffAtSlot(dd.di, slot, calWeekOff);
-        if(onNow.length) {
-          const cw = 100/onNow.length;
-          onNow.forEach((s,i) => {
-            const p=getPal(s); const sh=document.createElement('div'); sh.className='staff-shade';
-            sh.style.cssText=`left:${i*cw}%;width:${cw}%;background:${p.shade};border-left:1.5px solid ${p.bg}`;
-            td.appendChild(sh);
-          });
-        }
-        td.onclick = () => openBkModalWith(ds, slot);
+        const onNow=staffAtSlot(dd.di,slot,calWeekOff);
+        if(onNow.length){const cw=100/onNow.length;onNow.forEach((s,i)=>{const p=getPal(s);const sh=document.createElement('div');sh.className='staff-shade';sh.style.cssText=`left:${i*cw}%;width:${cw}%;background:${p.shade};border-left:1.5px solid ${p.bg}`;td.appendChild(sh);});}
+        td.onclick=()=>openBkModalWith(ds,slot);
       }
       tr.appendChild(td);
     });
@@ -461,73 +441,55 @@ function renderCalendar() {
 }
 
 // ── 予約一覧 ──
-function renderBookings() {
-  const el = document.getElementById('bk-list');
-  const list = Object.values(bookings).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
-  if(!list.length){el.innerHTML='<div style="padding:18px;text-align:center;color:#aaa;font-size:12px">予約がありません</div>';return;}
-  el.innerHTML = list.map(b => {
-    const c=bkc(b); const isEvt=b.type==='event', isGrp=b.grp==='group';
+function renderBookings(){
+  const el=document.getElementById('bk-list');
+  const list=Object.values(bookings).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">予約がありません</div>';return;}
+  el.innerHTML=list.map(b=>{
+    const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';
     const typeLbl=isEvt?'イベント':isGrp?'団体':'個人';
     const typeCls=isEvt?'b-evt':isGrp?'b-grp':'b-ind';
-    const paxBadge=isGrp?`<div class="bdg b-grp" style="margin-right:3px">${b.pax}名</div>`:'';
+    const paxBadge=isGrp?`<div class="bdg b-grp">${b.pax}名</div>`:'';
     return `<div class="lrow">
       <div class="av" style="background:${c.avBg};color:${c.avTc}">${b.name[0]}</div>
-      <div class="rm"><div class="rn">${b.name}</div><div class="rs">${b.space} ・ ${b.date} ${b.start}〜${b.end}</div></div>
-      ${paxBadge}
-      <div class="bdg ${typeCls}" style="margin-right:3px">${typeLbl}</div>
-      <div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}" style="margin-right:3px">${b.status}</div>
-      <button class="icon-btn" onclick="openBkModal('${b.id}')">✏</button>
-      <button class="icon-btn" onclick="delBk('${b.id}')" style="color:#F0B8B5">×</button>
+      <div class="rm">
+        <div class="rn">${b.name}</div>
+        <div class="rs">${b.space}<br>${b.date} ${b.start}〜${b.end}</div>
+        <div class="row-badges">
+          ${paxBadge}
+          <div class="bdg ${typeCls}">${typeLbl}</div>
+          <div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}">${b.status}</div>
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="icon-btn" onclick="openBkModal('${b.id}')">✏</button>
+        <button class="icon-btn" onclick="delBk('${b.id}')" style="color:#F0B8B5">×</button>
+      </div>
     </div>`;
   }).join('');
 }
 
-// ── シフト管理（セレクトボックス方式） ──
-function renderShifts() {
-  const m = monday(shiftWeekOff);
-  document.getElementById('shift-wlbl').textContent = m.getFullYear()+'年'+(m.getMonth()+1)+'月';
-  const staffList = Object.values(staff);
+// ── シフト管理 ──
+function renderShifts(){
+  const m=monday(shiftWeekOff);
+  document.getElementById('shift-wlbl').textContent=m.getFullYear()+'年'+(m.getMonth()+1)+'月';
+  const staffList=Object.values(staff);
+  const grid=document.getElementById('shift-grid');
+  if(!staffList.length){grid.innerHTML='<div style="padding:24px;text-align:center;font-size:13px;color:#aaa;background:#fff;border-radius:10px;border:1px solid var(--r200)">スタッフを追加してください</div>';return;}
 
-  const timeOptHtml = TIME_OPTS.map(t=>`<option value="${t}">${t}</option>`).join('');
-
-  let html = `<div style="overflow-x:auto"><table class="shift-table"><colgroup><col class="sc-name">${DN_ALL.map(()=>'<col>').join('')}</colgroup><thead><tr>`;
-  html += `<th class="sh-th" style="background:#FDF5F5;color:#8B2318;text-align:left;padding-left:12px">スタッフ</th>`;
-  DN_ALL.forEach(dd => {
-    const d = new Date(m); d.setDate(d.getDate()+dd.di);
-    const nc=dd.sat?'#185FA5':dd.sun?'#B23A33':'#8B2318';
-    const bg=dd.sat?'#EBF3FC':dd.sun?'#FFF5F5':'#FDF5F5';
-    html += `<th class="sh-th" style="background:${bg};color:${nc}">${dd.label}<br><span style="font-weight:400;font-size:9px;color:#aaa">${fmt(d)}</span></th>`;
-  });
-  html += '</tr></thead><tbody>';
-
-  if(!staffList.length) {
-    html += `<tr><td colspan="8" style="padding:24px;text-align:center;font-size:12px;color:#aaa">スタッフを追加してください</td></tr>`;
-  }
-
-  staffList.forEach(s => {
-    const p = getPal(s);
-    html += `<tr>`;
-    html += `<td class="sh-name-cell">
-      <div style="display:flex;align-items:center;gap:6px">
-        <div style="width:20px;height:20px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${s.init}</div>
-        <div style="min-width:0">
-          <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
-          <div style="font-size:9px;color:#aaa">${s.role}</div>
-        </div>
-        <div style="margin-left:auto;cursor:pointer;font-size:12px;color:#ddd;flex-shrink:0" onclick="removeStaff('${s.id}')">×</div>
-      </div>
-    </td>`;
-
-    DN_ALL.forEach(dd => {
-      const r = getShift(s.id, dd.di);
-      const isOff = !r;
-      const startVal = r ? minToStr(r[0]) : '9:00';
-      const endVal   = r ? (r[1]===24*60?'24:00':minToStr(r[1])) : '18:00';
-      const cellCls  = dd.sat ? 'sh-cell sat-bg' : dd.sun ? 'sh-cell sun-bg' : 'sh-cell';
-
-      html += `<td class="${cellCls}">
-        <div class="shift-label">${isOff?'休み':'勤務'}</div>
-        <div class="time-selects">
+  grid.innerHTML=staffList.map(s=>{
+    const p=getPal(s);
+    const daysHtml=DN_ALL.map(dd=>{
+      const d=new Date(m);d.setDate(d.getDate()+dd.di);
+      const r=getShift(s.id,dd.di);
+      const isOff=!r;
+      const startVal=r?minToStr(r[0]):'9:00';
+      const endVal=r?(r[1]===24*60?'24:00':minToStr(r[1])):'18:00';
+      const nc=dd.sat?'color:#185FA5':dd.sun?'color:#B23A33':'color:#1a1a1a';
+      const cellCls=dd.sat?'shift-day-cell sat-bg':dd.sun?'shift-day-cell sun-bg':'shift-day-cell';
+      return `<div class="${cellCls}">
+        <div class="shift-day-label" style="${nc}">${dd.label}<span class="shift-day-date">${fmt(d)}</span></div>
+        <div class="shift-time-row">
           <select class="time-sel" id="sel-s-${s.id}-${dd.di}" ${isOff?'disabled':''} onchange="onShiftChange('${s.id}',${dd.di})">
             ${TIME_OPTS.filter(t=>t!=='24:00').map(t=>`<option value="${t}"${t===startVal?' selected':''}>${t}</option>`).join('')}
           </select>
@@ -535,156 +497,104 @@ function renderShifts() {
           <select class="time-sel" id="sel-e-${s.id}-${dd.di}" ${isOff?'disabled':''} onchange="onShiftChange('${s.id}',${dd.di})">
             ${TIME_OPTS.filter(t=>t!=='8:00'&&t!=='8:30').map(t=>`<option value="${t}"${t===endVal?' selected':''}>${t}</option>`).join('')}
           </select>
-          <button class="off-btn ${isOff?'is-off':'is-on'}" onclick="toggleOff('${s.id}',${dd.di})">${isOff?'休み':'出勤'}</button>
         </div>
-      </td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  document.getElementById('shift-grid').innerHTML = html;
+        <button class="toggle-btn ${isOff?'is-off':'is-on'}" onclick="toggleOff('${s.id}',${dd.di})">${isOff?'休み':'出勤中'}</button>
+      </div>`;
+    }).join('');
+    return `<div class="shift-staff-card">
+      <div class="shift-staff-hdr">
+        <div style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${s.init}</div>
+        <div style="flex:1"><div class="shift-staff-name">${s.name}</div><div class="shift-staff-role">${s.role}</div></div>
+        <button class="shift-del-btn" onclick="removeStaff('${s.id}')">×</button>
+      </div>
+      <div class="shift-days-grid">${daysHtml}</div>
+    </div>`;
+  }).join('');
 }
 
-// シフト変更（セレクト操作）
-window.onShiftChange = function(sid, di) {
-  const startEl = document.getElementById('sel-s-'+sid+'-'+di);
-  const endEl   = document.getElementById('sel-e-'+sid+'-'+di);
-  if(!startEl||!endEl) return;
-  const s = strToMin(startEl.value);
-  let   e = strToMin(endEl.value);
-  if(e <= s) { e = Math.min(s+60, 24*60); endEl.value = e===24*60?'24:00':minToStr(e); }
-  const range = [s, e];
-  if(!shiftMap[sid]) shiftMap[sid]={};
-  shiftMap[sid][shiftWeekOff+'_'+di] = range;
-  set(ref(db, `shifts/${sid}/${shiftWeekOff}_${di}`), range);
-  setStatus('保存しました', 'saved');
-  // カレンダーとダッシュボードを即時更新
-  renderCalendar();
-  renderDashboard();
+window.onShiftChange=function(sid,di){
+  const startEl=document.getElementById('sel-s-'+sid+'-'+di);
+  const endEl=document.getElementById('sel-e-'+sid+'-'+di);
+  if(!startEl||!endEl)return;
+  const s=strToMin(startEl.value);let e=strToMin(endEl.value);
+  if(e<=s){e=Math.min(s+60,24*60);endEl.value=e===24*60?'24:00':minToStr(e);}
+  const range=[s,e];
+  if(!shiftMap[sid])shiftMap[sid]={};
+  shiftMap[sid][shiftWeekOff+'_'+di]=range;
+  set(ref(db,`shifts/${sid}/${shiftWeekOff}_${di}`),range);
+  setStatus('保存しました','saved');
+  renderCalendar();renderDashboard();
 };
 
-// 休み ↔ 出勤 トグル
-window.toggleOff = function(sid, di) {
-  const r = getShift(sid, di);
-  if(r) {
-    // 出勤 → 休み
-    remove(ref(db, `shifts/${sid}/${shiftWeekOff}_${di}`));
-    if(shiftMap[sid]) delete shiftMap[sid][shiftWeekOff+'_'+di];
-  } else {
-    // 休み → 出勤（デフォルト9:00〜18:00）
-    const range = [9*60, 18*60];
-    if(!shiftMap[sid]) shiftMap[sid]={};
-    shiftMap[sid][shiftWeekOff+'_'+di] = range;
-    set(ref(db, `shifts/${sid}/${shiftWeekOff}_${di}`), range);
-  }
-  setStatus('保存しました', 'saved');
-  renderShifts();
-  renderCalendar();
-  renderDashboard();
+window.toggleOff=function(sid,di){
+  const r=getShift(sid,di);
+  if(r){remove(ref(db,`shifts/${sid}/${shiftWeekOff}_${di}`));if(shiftMap[sid])delete shiftMap[sid][shiftWeekOff+'_'+di];}
+  else{const range=[9*60,18*60];if(!shiftMap[sid])shiftMap[sid]={};shiftMap[sid][shiftWeekOff+'_'+di]=range;set(ref(db,`shifts/${sid}/${shiftWeekOff}_${di}`),range);}
+  setStatus('保存しました','saved');renderShifts();renderCalendar();renderDashboard();
 };
 
-window.removeStaff = function(id) {
-  if(!confirm('このスタッフを削除しますか？')) return;
-  remove(ref(db,'staff/'+id));
-  remove(ref(db,'shifts/'+id));
-};
+window.removeStaff=function(id){if(!confirm('このスタッフを削除しますか？'))return;remove(ref(db,'staff/'+id));remove(ref(db,'shifts/'+id));};
 
 // ── ダッシュボード ──
-function renderDashboard() {
-  const now = new Date();
-  const mo = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
-  const bkList = Object.values(bookings);
-  document.getElementById('d1').textContent = bkList.filter(b=>b.date.startsWith(mo)).length;
-  document.getElementById('d2').textContent = [...new Set(bkList.map(b=>b.name))].length;
-  const total = bkList.reduce((sum, b) => {
-    if(b.type==='event') return sum;
-    return sum + (b.grp==='group' ? (parseInt(b.pax)||0) : 1);
-  }, 0);
-  document.getElementById('d5').textContent = total;
-  document.getElementById('d3').textContent = Math.round(bkList.length/20*100)+'%';
-  document.getElementById('d4').textContent = Object.values(staff).length;
-
-  const recent = [...bkList].sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)).slice(0,5);
-  document.getElementById('dash-bk').innerHTML = recent.length
-    ? recent.map(b=>{const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';return `<div class="lrow"><div class="rm"><div class="rn">${b.name}${isGrp?' (団体'+b.pax+'名)':''}</div><div class="rs">${b.space} ・ ${b.date}</div></div><div class="bdg" style="background:${c.avBg};color:${c.avTc};margin-right:3px">${isEvt?'イベント':isGrp?'団体':'個人'}</div><div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}">${b.status}</div></div>`;}).join('')
-    : '<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">予約なし</div>';
-
-  const todayDow = now.getDay(); const di = todayDow>=1&&todayDow<=5?todayDow-1:0;
-  const staffList = Object.values(staff);
-  document.getElementById('dash-staff').innerHTML = staffList.length
-    ? staffList.map(s=>{const r=getShift(s.id,di,0);const p=getPal(s);const label=r?minToStr(r[0])+'〜'+(r[1]===24*60?'24:00':minToStr(r[1])):'休み';return `<div class="lrow"><div class="av" style="background:${p.bg};color:${p.tc}">${s.init}</div><div class="rm"><div class="rn">${s.name}</div><div class="rs">${s.role}</div></div><div class="bdg" style="background:${r?p.shade:'#f0f0f0'};color:${r?p.tc:'#aaa'};border:1px solid ${r?p.bg:'#ddd'}">${label}</div></div>`;}).join('')
-    : '<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">スタッフなし</div>';
+function renderDashboard(){
+  const now=new Date();const mo=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  const bkList=Object.values(bookings);
+  document.getElementById('d1').textContent=bkList.filter(b=>b.date.startsWith(mo)).length;
+  document.getElementById('d2').textContent=[...new Set(bkList.map(b=>b.name))].length;
+  const total=bkList.reduce((sum,b)=>{if(b.type==='event')return sum;return sum+(b.grp==='group'?(parseInt(b.pax)||0):1);},0);
+  document.getElementById('d5').textContent=total;
+  document.getElementById('d3').textContent=Math.round(bkList.length/20*100)+'%';
+  document.getElementById('d4').textContent=Object.values(staff).length;
+  const recent=[...bkList].sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)).slice(0,5);
+  document.getElementById('dash-bk').innerHTML=recent.length
+    ?recent.map(b=>{const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';return `<div class="dash-row"><div class="rm"><div class="rn" style="font-size:12px">${b.name}${isGrp?' ('+b.pax+'名)':''}</div><div class="rs">${b.space} ・ ${b.date}</div></div><div class="bdg" style="background:${c.avBg};color:${c.avTc}">${isEvt?'イベント':isGrp?'団体':'個人'}</div></div>`;}).join('')
+    :'<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">予約なし</div>';
+  const todayDow=now.getDay();const di=todayDow>=1&&todayDow<=5?todayDow-1:0;
+  const staffList=Object.values(staff);
+  document.getElementById('dash-staff').innerHTML=staffList.length
+    ?staffList.map(s=>{const r=getShift(s.id,di,0);const p=getPal(s);const label=r?minToStr(r[0])+'〜'+(r[1]===24*60?'24:00':minToStr(r[1])):'休み';return `<div class="dash-row"><div class="av" style="background:${p.bg};color:${p.tc};width:26px;height:26px;font-size:11px">${s.init}</div><div class="rm"><div class="rn" style="font-size:12px">${s.name}</div><div class="rs">${s.role}</div></div><div class="bdg" style="background:${r?p.shade:'#f0f0f0'};color:${r?p.tc:'#aaa'};border:1px solid ${r?p.bg:'#ddd'}">${label}</div></div>`;}).join('')
+    :'<div style="padding:14px;text-align:center;color:#aaa;font-size:12px">スタッフなし</div>';
 }
 
 // ── スタッフ ──
-window.openStaffModal = function() {
-  document.getElementById('s-name').value='';
-  document.getElementById('modal-staff').classList.add('open');
-};
-window.saveStaff = function() {
-  const name = document.getElementById('s-name').value.trim(); if(!name) return;
-  const newRef = push(ref(db,'staff'));
-  set(newRef, {name, role:document.getElementById('s-role').value, init:name[0], pal:parseInt(document.getElementById('s-color').value)});
+window.openStaffModal=function(){document.getElementById('s-name').value='';document.getElementById('modal-staff').classList.add('open');};
+window.saveStaff=function(){
+  const name=document.getElementById('s-name').value.trim();if(!name)return;
+  const newRef=push(ref(db,'staff'));
+  set(newRef,{name,role:document.getElementById('s-role').value,init:name[0],pal:parseInt(document.getElementById('s-color').value)});
   document.getElementById('modal-staff').classList.remove('open');
 };
 
 // ── 予約 ──
-function buildTimes(startSlot) {
-  const si = startSlot ? SLOTS.indexOf(startSlot) : 2;
-  document.getElementById('i-start').innerHTML = SLOTS.map((s,i)=>`<option${i===si?' selected':''}>${s}</option>`).join('');
-  document.getElementById('i-end').innerHTML = SLOTS.map((s,i)=>`<option${i===Math.min(si+4,SLOTS.length-1)?' selected':''}>${s}</option>`).join('');
+function buildTimes(startSlot){
+  const si=startSlot?SLOTS.indexOf(startSlot):2;
+  document.getElementById('i-start').innerHTML=SLOTS.map((s,i)=>`<option${i===si?' selected':''}>${s}</option>`).join('');
+  document.getElementById('i-end').innerHTML=SLOTS.map((s,i)=>`<option${i===Math.min(si+4,SLOTS.length-1)?' selected':''}>${s}</option>`).join('');
 }
-window.onTypeChange = function(){document.getElementById('user-detail-section').style.display=document.getElementById('i-type').value==='event'?'none':'block';};
-window.onGrpChange = function(){document.getElementById('pax-section').style.display=document.querySelector('input[name="grp"]:checked').value==='group'?'block':'none';};
-
-window.openBkModal = function(id) {
-  editingBkId = id;
-  document.getElementById('bk-mtitle').textContent = id ? '予約を編集' : '予約を追加';
-  if(id) {
-    const b = bookings[id]; if(!b) return;
-    document.getElementById('i-type').value=b.type; window.onTypeChange();
-    if(b.type==='user'){const gv=b.grp||'individual';document.querySelector(`input[name="grp"][value="${gv}"]`).checked=true;document.getElementById('pax-section').style.display=gv==='group'?'block':'none';document.getElementById('i-pax').value=b.pax||'';}
-    document.getElementById('i-name').value=b.name;
-    document.getElementById('i-space').value=b.space;
-    document.getElementById('i-date').value=b.date;
-    buildTimes(b.start);
-    document.getElementById('i-end').value=b.end;
-    document.getElementById('i-status').value=b.status;
-  } else {
-    document.getElementById('i-type').value='user'; window.onTypeChange();
-    document.querySelector('input[name="grp"][value="individual"]').checked=true;
-    document.getElementById('pax-section').style.display='none';
-    document.getElementById('i-name').value='';
-    document.getElementById('i-date').value=dateStr(calWeekOff,0);
-    document.getElementById('i-status').value='仮予約';
-    buildTimes();
-  }
+window.onTypeChange=function(){document.getElementById('user-detail-section').style.display=document.getElementById('i-type').value==='event'?'none':'block';};
+window.onGrpChange=function(){document.getElementById('pax-section').style.display=document.querySelector('input[name="grp"]:checked').value==='group'?'block':'none';};
+window.openBkModal=function(id){
+  editingBkId=id;document.getElementById('bk-mtitle').textContent=id?'予約を編集':'予約を追加';
+  if(id){const b=bookings[id];if(!b)return;document.getElementById('i-type').value=b.type;window.onTypeChange();if(b.type==='user'){const gv=b.grp||'individual';document.querySelector(`input[name="grp"][value="${gv}"]`).checked=true;document.getElementById('pax-section').style.display=gv==='group'?'block':'none';document.getElementById('i-pax').value=b.pax||'';}document.getElementById('i-name').value=b.name;document.getElementById('i-space').value=b.space;document.getElementById('i-date').value=b.date;buildTimes(b.start);document.getElementById('i-end').value=b.end;document.getElementById('i-status').value=b.status;}
+  else{document.getElementById('i-type').value='user';window.onTypeChange();document.querySelector('input[name="grp"][value="individual"]').checked=true;document.getElementById('pax-section').style.display='none';document.getElementById('i-name').value='';document.getElementById('i-date').value=dateStr(calWeekOff,0);document.getElementById('i-status').value='仮予約';buildTimes();}
   document.getElementById('modal-bk').classList.add('open');
 };
-window.openBkModalWith = function(date, slot) {
-  window.openBkModal(null);
-  document.getElementById('i-date').value=date; buildTimes(slot);
-};
-window.saveBk = function() {
-  const name = document.getElementById('i-name').value.trim(); if(!name) return;
-  const type = document.getElementById('i-type').value;
-  const grp = type==='user' ? document.querySelector('input[name="grp"]:checked').value : null;
-  const pax = grp==='group' ? parseInt(document.getElementById('i-pax').value)||null : null;
-  const data = {type,grp,pax,name,space:document.getElementById('i-space').value,date:document.getElementById('i-date').value,start:document.getElementById('i-start').value,end:document.getElementById('i-end').value,status:document.getElementById('i-status').value};
-  if(editingBkId) update(ref(db,'bookings/'+editingBkId), data);
-  else push(ref(db,'bookings'), data);
+window.openBkModalWith=function(date,slot){window.openBkModal(null);document.getElementById('i-date').value=date;buildTimes(slot);};
+window.saveBk=function(){
+  const name=document.getElementById('i-name').value.trim();if(!name)return;
+  const type=document.getElementById('i-type').value;
+  const grp=type==='user'?document.querySelector('input[name="grp"]:checked').value:null;
+  const pax=grp==='group'?parseInt(document.getElementById('i-pax').value)||null:null;
+  const data={type,grp,pax,name,space:document.getElementById('i-space').value,date:document.getElementById('i-date').value,start:document.getElementById('i-start').value,end:document.getElementById('i-end').value,status:document.getElementById('i-status').value};
+  if(editingBkId)update(ref(db,'bookings/'+editingBkId),data);
+  else push(ref(db,'bookings'),data);
   document.getElementById('modal-bk').classList.remove('open');
   setStatus('保存しました','saved');
 };
-window.delBk = function(id) {
-  if(!confirm('この予約を削除しますか？')) return;
-  remove(ref(db,'bookings/'+id));
-};
+window.delBk=function(id){if(!confirm('この予約を削除しますか？'))return;remove(ref(db,'bookings/'+id));};
 
-// ── 初期化 ──
-const now = new Date();
-document.getElementById('hdr-date').textContent = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）';
+const now=new Date();
+document.getElementById('hdr-date').textContent=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
 </script>
 </body>
 </html>
