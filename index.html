@@ -527,19 +527,25 @@ function renderBookings(){
 }
 
 // ── シフト管理 ──
-function sortedStaff(){return Object.values(staff).sort((a,b)=>(a.order??9999)-(b.order??9999));}
+function sortedStaff(){
+  return Object.values(staff).sort((a,b)=>(a.order??9999)-(b.order??9999));
+}
 function moveStaff(id,dir){
+  // orderを0,1,2...と整理してからswap
   const list=sortedStaff();
+  // まず全員にorderを振り直す
+  list.forEach((s,i)=>{s._tempOrder=i;});
   const idx=list.findIndex(s=>s.id===id);
   const newIdx=idx+dir;
   if(newIdx<0||newIdx>=list.length)return;
-  // swap order values
-  const tmp=list[idx].order??idx;
-  const swapOrder=list[newIdx].order??newIdx;
+  // swap
+  list[idx]._tempOrder=newIdx;
+  list[newIdx]._tempOrder=idx;
   const updates={};
-  updates['staff/'+list[idx].id+'/order']=swapOrder;
-  updates['staff/'+list[newIdx].id+'/order']=tmp;
-  update(ref(db),updates).then(()=>setStatus('並び順を保存しました','saved'));
+  list.forEach(s=>{updates['staff/'+s.id+'/order']=s._tempOrder;});
+  update(ref(db),updates)
+    .then(()=>{ setStatus('並び順を保存しました','saved'); })
+    .catch(e=>{ console.error(e); setStatus('保存エラー','err'); });
 }
 
 function renderShifts(){
@@ -549,7 +555,8 @@ function renderShifts(){
   const grid=document.getElementById('shift-grid');
   if(!staffList.length){grid.innerHTML='<div style="padding:24px;text-align:center;font-size:13px;color:#aaa;background:#fff;border-radius:10px;border:1px solid var(--r200)">スタッフを追加してください</div>';return;}
 
-  grid.innerHTML=staffList.map((s,idx)=>{
+  grid.innerHTML='';
+  staffList.forEach((s,idx)=>{
     const p=getPal(s);
     const daysHtml=DN_ALL.map(dd=>{
       const d=new Date(m);d.setDate(d.getDate()+dd.di);
@@ -573,21 +580,38 @@ function renderShifts(){
         <button class="toggle-btn ${isOff?'is-off':'is-on'}" onclick="toggleOff('${s.id}',${dd.di})">${isOff?'休み':'出勤中'}</button>
       </div>`;
     }).join('');
-    const isFirst=idx===0;const isLast=idx===staffList.length-1;
-    return `<div class="shift-staff-card" id="scard-${s.id}">
+    const isFirst=idx===0;
+    const isLast=idx===staffList.length-1;
+    const sid=s.id;
+    const upDisabled=isFirst?'disabled':'';
+    const downDisabled=isLast?'disabled':'';
+    const upOp=isFirst?'0.2':'1';
+    const downOp=isLast?'0.2':'1';
+    const cardEl=document.createElement('div');
+    cardEl.className='shift-staff-card';
+    cardEl.id='scard-'+sid;
+    cardEl.innerHTML=`
       <div class="shift-staff-hdr">
         <div style="display:flex;flex-direction:column;gap:1px;margin-right:4px">
-          <button class="move-btn" onclick="moveStaff('${s.id}',-1)" ${isFirst?'disabled':''} style="opacity:${isFirst?'0.2':'1'}">▲</button>
-          <button class="move-btn" onclick="moveStaff('${s.id}',1)" ${isLast?'disabled':''} style="opacity:${isLast?'0.2':'1'}">▼</button>
+          <button class="move-btn" style="opacity:${upOp}" ${upDisabled}>▲</button>
+          <button class="move-btn" style="opacity:${downOp}" ${downDisabled}>▼</button>
         </div>
         <div style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${s.init}</div>
         <div style="flex:1"><div class="shift-staff-name">${s.name}</div><div class="shift-staff-role">${s.role}</div></div>
-        <button class="shift-del-btn" style="color:#aaa;font-size:12px;margin-right:6px" onclick="openEditStaffModal('${s.id}')">✏</button>
-        <button class="shift-del-btn" onclick="removeStaff('${s.id}')">×</button>
+        <button class="shift-del-btn" style="color:#aaa;font-size:12px;margin-right:6px">✏</button>
+        <button class="shift-del-btn">×</button>
       </div>
-      <div class="shift-days-grid">${daysHtml}</div>
-    </div>`;
-  }).join('');
+      <div class="shift-days-grid">${daysHtml}</div>`;
+    const btns=cardEl.querySelectorAll('.move-btn');
+    if(!isFirst) btns[0].addEventListener('click',()=>moveStaff(sid,-1));
+    if(!isLast)  btns[1].addEventListener('click',()=>moveStaff(sid,1));
+    const editBtn=cardEl.querySelector('.shift-del-btn');
+    editBtn.addEventListener('click',()=>openEditStaffModal(sid));
+    const delBtn=cardEl.querySelectorAll('.shift-del-btn')[1];
+    delBtn.addEventListener('click',()=>removeStaff(sid));
+    return cardEl;
+    grid.appendChild(cardEl);
+  });
 }
 
 window.onShiftChange=function(sid,di){
