@@ -78,6 +78,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 .b-ind{background:#EAF3DE;color:#27500A}
 .b-grp{background:#E6F1FB;color:#0C447C}
 .b-evt{background:#FAEEDA;color:#633806}
+.b-oth{background:#F1EFE8;color:#444441}
 .icon-btn{cursor:pointer;padding:6px 10px;border-radius:6px;font-size:13px;color:#aaa;border:1px solid var(--r100);background:#fff;-webkit-tap-highlight-color:transparent}
 .icon-btn:active{background:var(--r50)}
 
@@ -145,6 +146,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 
 /* ステータス */
 .status-bar{font-size:10px;text-align:right;padding:3px 0;min-height:16px;color:#aaa}
+.shift-staff-card.dragging{opacity:.4;border:2px dashed var(--r400)}
+.shift-staff-card.drag-over{border-top:3px solid var(--r600)}
+.drag-handle{cursor:grab;font-size:16px;color:#ccc;padding:0 6px;user-select:none;touch-action:none}
+.drag-handle:active{cursor:grabbing}
 .dash-section-title{font-size:12px;font-weight:700;color:var(--r800);margin:16px 0 8px;padding-left:2px;letter-spacing:.03em}
 .chart-card{background:#fff;border:1px solid var(--r100);border-radius:10px;padding:16px 14px;margin-bottom:14px;overflow-x:auto}
 .chart-inner{min-width:320px}
@@ -214,6 +219,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
       <div class="lgi"><div class="lgd" style="background:#63A826"></div>個人</div>
       <div class="lgi"><div class="lgd" style="background:#2E86DE"></div>団体</div>
       <div class="lgi"><div class="lgd" style="background:#F0A500"></div>イベント</div>
+      <div class="lgi"><div class="lgd" style="background:#888780"></div>その他</div>
       <div class="lgi"><div class="lgd" style="background:#B5D4F4"></div>土</div>
       <div class="lgi"><div class="lgd" style="background:#FAE8E7"></div>日</div>
     </div>
@@ -291,7 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
     <div class="mtitle" id="bk-mtitle">予約を追加</div>
     <div class="fg"><label class="flbl">種別</label>
       <select class="fi" id="i-type" onchange="onTypeChange()">
-        <option value="user">一般予約</option><option value="event">イベント</option>
+        <option value="user">一般予約</option><option value="event">イベント</option><option value="other">その他</option>
       </select>
     </div>
     <div id="user-detail-section">
@@ -331,25 +337,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
   </div>
 </div>
 
-<!-- スタッフモーダル -->
+<!-- スタッフモーダル（追加・編集共用） -->
 <div class="modal-overlay" id="modal-staff" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="mtitle">スタッフを追加</div>
-    <div class="fg"><label class="flbl">氏名</label><input class="fi" id="s-name" type="text" placeholder="例：山本 花子"></div>
+    <div class="mtitle" id="staff-modal-title">スタッフを追加</div>
+    <div class="fg" id="s-name-group"><label class="flbl">氏名</label><input class="fi" id="s-name" type="text" placeholder="例：山本 花子"></div>
     <div class="fg"><label class="flbl">役職</label>
       <select class="fi" id="s-role"><option>マネージャー</option><option>スタッフ</option><option>アルバイト</option></select>
     </div>
     <div class="fg"><label class="flbl">カラー</label>
-      <select class="fi" id="s-color">
-        <option value="0">アンバー</option><option value="1">ティール</option>
-        <option value="2">パープル</option><option value="3">ピンク</option>
-        <option value="4">ブルー</option><option value="5">コーラル</option>
-      </select>
+      <select class="fi" id="s-color"></select>
     </div>
     <div class="mact">
       <div class="bts" onclick="document.getElementById('modal-staff').classList.remove('open')">キャンセル</div>
-      <button class="btp" onclick="saveStaff()">追加する</button>
+      <button class="btp" id="staff-modal-btn" onclick="saveStaff()">追加する</button>
     </div>
   </div>
 </div>
@@ -372,12 +374,17 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const PALETTES = [
-  {bg:'#EF9F27',tc:'#633806',shade:'rgba(239,159,39,0.12)'},
-  {bg:'#5DCAA5',tc:'#085041',shade:'rgba(93,202,165,0.12)'},
-  {bg:'#7F77DD',tc:'#3C3489',shade:'rgba(127,119,221,0.12)'},
-  {bg:'#D4537E',tc:'#72243E',shade:'rgba(212,83,126,0.12)'},
-  {bg:'#378ADD',tc:'#0C447C',shade:'rgba(55,138,221,0.12)'},
-  {bg:'#D85A30',tc:'#712B13',shade:'rgba(216,90,48,0.12)'},
+  {bg:'#EF9F27',tc:'#633806',shade:'rgba(239,159,39,0.12)',name:'アンバー'},
+  {bg:'#5DCAA5',tc:'#085041',shade:'rgba(93,202,165,0.12)',name:'ティール'},
+  {bg:'#7F77DD',tc:'#3C3489',shade:'rgba(127,119,221,0.12)',name:'パープル'},
+  {bg:'#D4537E',tc:'#72243E',shade:'rgba(212,83,126,0.12)',name:'ピンク'},
+  {bg:'#378ADD',tc:'#0C447C',shade:'rgba(55,138,221,0.12)',name:'ブルー'},
+  {bg:'#D85A30',tc:'#712B13',shade:'rgba(216,90,48,0.12)',name:'コーラル'},
+  {bg:'#3B6D11',tc:'#EAF3DE',shade:'rgba(59,109,17,0.12)',name:'グリーン'},
+  {bg:'#B23A33',tc:'#FAE8E7',shade:'rgba(178,58,51,0.12)',name:'レッド'},
+  {bg:'#0C6E8A',tc:'#E0F4FA',shade:'rgba(12,110,138,0.12)',name:'シアン'},
+  {bg:'#7A5200',tc:'#FFF3DC',shade:'rgba(122,82,0,0.12)',name:'ブラウン'},
+  {bg:'#444441',tc:'#F1EFE8',shade:'rgba(68,68,65,0.12)',name:'グレー'},
 ];
 const DN_ALL = [
   {label:'月',di:0,sat:false,sun:false},{label:'火',di:1,sat:false,sun:false},
@@ -393,6 +400,7 @@ const BK={
   ind:{bar:'#63A826',cell:'#EAF3DE',avBg:'#EAF3DE',avTc:'#27500A'},
   grp:{bar:'#2E86DE',cell:'#E6F1FB',avBg:'#E6F1FB',avTc:'#0C447C'},
   evt:{bar:'#F0A500',cell:'#FAEEDA',avBg:'#FAEEDA',avTc:'#633806'},
+  oth:{bar:'#888780',cell:'#F1EFE8',avBg:'#F1EFE8',avTc:'#444441'},
 };
 
 let staff={}, bookings={}, shiftMap={};
@@ -408,7 +416,7 @@ function strToMin(s){const[h,mi]=s.split(':').map(Number);return h*60+mi;}
 function isToday(d){const t=new Date();return d.toDateString()===t.toDateString();}
 function slotMin(s){const[h,mi]=s.split(':').map(Number);return h*60+mi;}
 function getPal(s){return PALETTES[(s.pal||0)%PALETTES.length];}
-function bkc(b){return b.type==='event'?BK.evt:b.grp==='group'?BK.grp:BK.ind;}
+function bkc(b){return b.type==='event'?BK.evt:b.type==='other'?BK.oth:b.grp==='group'?BK.grp:BK.ind;}
 function getShift(sid,di,off){const wo=off!==undefined?off:shiftWeekOff;return((shiftMap[sid]||{})[wo+'_'+di])||null;}
 function staffAtSlot(di,slot,off){const sm=slotMin(slot);return Object.values(staff).filter(s=>{const r=getShift(s.id,di,off);return r&&sm>=r[0]&&sm<r[1]});}
 
@@ -496,8 +504,9 @@ function renderBookings(){
   if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">予約がありません</div>';return;}
   el.innerHTML=list.map(b=>{
     const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';
-    const typeLbl=isEvt?'イベント':isGrp?'団体':'個人';
-    const typeCls=isEvt?'b-evt':isGrp?'b-grp':'b-ind';
+    const isOth=b.type==='other';
+    const typeLbl=isEvt?'イベント':isOth?'その他':isGrp?'団体':'個人';
+    const typeCls=isEvt?'b-evt':isOth?'b-oth':isGrp?'b-grp':'b-ind';
     const paxBadge=isGrp?`<div class="bdg b-grp">${b.pax}名</div>`:'';
     return `<div class="lrow">
       <div class="av" style="background:${c.avBg};color:${c.avTc}">${b.name[0]}</div>
@@ -519,10 +528,32 @@ function renderBookings(){
 }
 
 // ── シフト管理 ──
+let dragSrcId=null;
+function dragStart(e,id){dragSrcId=id;document.getElementById('scard-'+id).classList.add('dragging');}
+function dragOver(e,id){e.preventDefault();if(id!==dragSrcId)document.getElementById('scard-'+id).classList.add('drag-over');}
+function dragLeave(e,id){document.getElementById('scard-'+id).classList.remove('drag-over');}
+function dragDrop(e,id){
+  e.preventDefault();
+  if(!dragSrcId||dragSrcId===id)return;
+  const list=Object.values(staff).sort((a,b)=>(a.order??99)-(b.order??99));
+  const srcIdx=list.findIndex(s=>s.id===dragSrcId);
+  const tgtIdx=list.findIndex(s=>s.id===id);
+  if(srcIdx<0||tgtIdx<0)return;
+  const moved=list.splice(srcIdx,1)[0];
+  list.splice(tgtIdx,0,moved);
+  const updates={};
+  list.forEach((s,i)=>{updates['staff/'+s.id+'/order']=i;});
+  update(ref(db),updates);
+}
+function dragEnd(){
+  document.querySelectorAll('.shift-staff-card').forEach(el=>{el.classList.remove('dragging','drag-over');});
+  dragSrcId=null;
+}
+
 function renderShifts(){
   const m=monday(shiftWeekOff);
   document.getElementById('shift-wlbl').textContent=m.getFullYear()+'年'+(m.getMonth()+1)+'月';
-  const staffList=Object.values(staff);
+  const staffList=Object.values(staff).sort((a,b)=>(a.order??99)-(b.order??99));
   const grid=document.getElementById('shift-grid');
   if(!staffList.length){grid.innerHTML='<div style="padding:24px;text-align:center;font-size:13px;color:#aaa;background:#fff;border-radius:10px;border:1px solid var(--r200)">スタッフを追加してください</div>';return;}
 
@@ -550,10 +581,12 @@ function renderShifts(){
         <button class="toggle-btn ${isOff?'is-off':'is-on'}" onclick="toggleOff('${s.id}',${dd.di})">${isOff?'休み':'出勤中'}</button>
       </div>`;
     }).join('');
-    return `<div class="shift-staff-card">
+    return `<div class="shift-staff-card" id="scard-${s.id}" draggable="true" ondragstart="dragStart(event,'${s.id}')" ondragover="dragOver(event,'${s.id}')" ondragleave="dragLeave(event,'${s.id}')" ondrop="dragDrop(event,'${s.id}')" ondragend="dragEnd()">
       <div class="shift-staff-hdr">
+        <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
         <div style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${s.init}</div>
         <div style="flex:1"><div class="shift-staff-name">${s.name}</div><div class="shift-staff-role">${s.role}</div></div>
+        <button class="shift-del-btn" style="color:#aaa;font-size:12px;margin-right:4px" onclick="openEditStaffModal('${s.id}')">✏</button>
         <button class="shift-del-btn" onclick="removeStaff('${s.id}')">×</button>
       </div>
       <div class="shift-days-grid">${daysHtml}</div>
@@ -674,11 +707,47 @@ function renderDashboard(){
 }
 
 // ── スタッフ ──
-window.openStaffModal=function(){document.getElementById('s-name').value='';document.getElementById('modal-staff').classList.add('open');};
+let editingStaffId=null;
+
+function buildColorSelect(selectedPal){
+  const sel=document.getElementById('s-color');
+  sel.innerHTML=PALETTES.map((p,i)=>`<option value="${i}"${i===selectedPal?' selected':''}>${p.name}</option>`).join('');
+}
+
+window.openStaffModal=function(){
+  editingStaffId=null;
+  document.getElementById('staff-modal-title').textContent='スタッフを追加';
+  document.getElementById('staff-modal-btn').textContent='追加する';
+  document.getElementById('s-name-group').style.display='block';
+  document.getElementById('s-name').value='';
+  document.getElementById('s-role').value='スタッフ';
+  buildColorSelect(0);
+  document.getElementById('modal-staff').classList.add('open');
+};
+
+window.openEditStaffModal=function(id){
+  const s=staff[id];if(!s)return;
+  editingStaffId=id;
+  document.getElementById('staff-modal-title').textContent='スタッフを編集';
+  document.getElementById('staff-modal-btn').textContent='更新する';
+  document.getElementById('s-name-group').style.display='none';
+  document.getElementById('s-role').value=s.role||'スタッフ';
+  buildColorSelect(s.pal||0);
+  document.getElementById('modal-staff').classList.add('open');
+};
+
 window.saveStaff=function(){
-  const name=document.getElementById('s-name').value.trim();if(!name)return;
-  const newRef=push(ref(db,'staff'));
-  set(newRef,{name,role:document.getElementById('s-role').value,init:name[0],pal:parseInt(document.getElementById('s-color').value)});
+  if(editingStaffId){
+    const updates={role:document.getElementById('s-role').value,pal:parseInt(document.getElementById('s-color').value)};
+    const s=staff[editingStaffId];
+    updates.init=s.init;updates.name=s.name;
+    update(ref(db,'staff/'+editingStaffId),updates);
+  } else {
+    const name=document.getElementById('s-name').value.trim();if(!name)return;
+    const newRef=push(ref(db,'staff'));
+    const order=Object.keys(staff).length;
+    set(newRef,{name,role:document.getElementById('s-role').value,init:name[0],pal:parseInt(document.getElementById('s-color').value),order});
+  }
   document.getElementById('modal-staff').classList.remove('open');
 };
 
@@ -688,11 +757,11 @@ function buildTimes(startSlot){
   document.getElementById('i-start').innerHTML=SLOTS.map((s,i)=>`<option${i===si?' selected':''}>${s}</option>`).join('');
   document.getElementById('i-end').innerHTML=SLOTS.map((s,i)=>`<option${i===Math.min(si+4,SLOTS.length-1)?' selected':''}>${s}</option>`).join('');
 }
-window.onTypeChange=function(){document.getElementById('user-detail-section').style.display=document.getElementById('i-type').value==='event'?'none':'block';};
+window.onTypeChange=function(){const t=document.getElementById('i-type').value;document.getElementById('user-detail-section').style.display=(t==='event'||t==='other')?'none':'block';};
 window.onGrpChange=function(){document.getElementById('pax-section').style.display=document.querySelector('input[name="grp"]:checked').value==='group'?'block':'none';};
 window.openBkModal=function(id){
   editingBkId=id;document.getElementById('bk-mtitle').textContent=id?'予約を編集':'予約を追加';
-  if(id){const b=bookings[id];if(!b)return;document.getElementById('i-type').value=b.type;window.onTypeChange();if(b.type==='user'){const gv=b.grp||'individual';document.querySelector(`input[name="grp"][value="${gv}"]`).checked=true;document.getElementById('pax-section').style.display=gv==='group'?'block':'none';document.getElementById('i-pax').value=b.pax||'';}document.getElementById('i-name').value=b.name;document.getElementById('i-space').value=b.space;document.getElementById('i-date').value=b.date;buildTimes(b.start);document.getElementById('i-end').value=b.end;document.getElementById('i-status').value=b.status;}
+  if(id){const b=bookings[id];if(!b)return;document.getElementById('i-type').value=b.type||'user';window.onTypeChange();if(b.type==='user'){const gv=b.grp||'individual';document.querySelector(`input[name="grp"][value="${gv}"]`).checked=true;document.getElementById('pax-section').style.display=gv==='group'?'block':'none';document.getElementById('i-pax').value=b.pax||'';}document.getElementById('i-name').value=b.name;document.getElementById('i-space').value=b.space;document.getElementById('i-date').value=b.date;buildTimes(b.start);document.getElementById('i-end').value=b.end;document.getElementById('i-status').value=b.status;}
   else{document.getElementById('i-type').value='user';window.onTypeChange();document.querySelector('input[name="grp"][value="individual"]').checked=true;document.getElementById('pax-section').style.display='none';document.getElementById('i-name').value='';document.getElementById('i-date').value=dateStr(calWeekOff,0);document.getElementById('i-status').value='仮予約';buildTimes();}
   document.getElementById('modal-bk').classList.add('open');
 };
