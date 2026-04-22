@@ -149,6 +149,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 
 /* ステータス */
 .status-bar{font-size:10px;text-align:right;padding:3px 0;min-height:16px;color:#aaa}
+.bk-mo-active{background:var(--r600)!important;color:#fff!important;border-color:var(--r600)!important}
+.bk-row-past{opacity:.45}
 .dash-section-title{font-size:12px;font-weight:700;color:var(--r800);margin:16px 0 8px;padding-left:2px;letter-spacing:.03em}
 .chart-card{background:#fff;border:1px solid var(--r100);border-radius:10px;padding:16px 14px;margin-bottom:14px;overflow-x:auto}
 .chart-inner{min-width:320px}
@@ -227,9 +229,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 
   <!-- 予約一覧 -->
   <div class="view" id="view-bookings">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="stitle" style="margin:0">予約一覧</div>
-      <div class="addbtn" onclick="openBkModal(null)">+ 新規予約</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <div class="stitle" style="margin:0" id="bk-month-label">予約一覧</div>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <div class="nbns">
+          <div class="nbn" id="btn-prev-mo" onclick="changeBkMonth(-1)">前月</div>
+          <div class="nbn bk-mo-active" id="btn-cur-mo" onclick="changeBkMonth(0)">当月</div>
+          <div class="nbn" id="btn-next-mo" onclick="changeBkMonth(1)">来月</div>
+        </div>
+        <div class="addbtn" onclick="openBkModal(null)">+ 新規予約</div>
+      </div>
     </div>
     <div class="lcard" id="bk-list"></div>
     <button class="add-bk-fab" onclick="openBkModal(null)">+</button>
@@ -405,8 +414,19 @@ const BK={
 let staff={}, bookings={}, shiftMap={};
 let calWeekOff=0, shiftWeekOff=0;
 let editingBkId=null;
+let bkMonthOffset=0; // 0=当月, -1=前月, 1=来月
 
 function setStatus(msg,cls=''){const el=document.getElementById('status-bar');el.textContent=msg;el.className='status-bar '+cls;}
+
+function changeBkMonth(offset){
+  bkMonthOffset=offset;
+  // ボタンのactive状態を切り替え
+  ['btn-prev-mo','btn-cur-mo','btn-next-mo'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('bk-mo-active',[-1,0,1][i]===offset);
+  });
+  renderBookings();
+}
 function monday(off){const n=new Date();const day=n.getDay();const base=n.getDate()-day+(day===0?-6:1);const m=new Date(n);m.setDate(base+off*7);m.setHours(0,0,0,0);return m;}
 function dateStr(off,di){const m=monday(off);const d=new Date(m);d.setDate(d.getDate()+di);const y=d.getFullYear();const mo=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return y+'-'+mo+'-'+dd;}
 function fmt(d){return (d.getMonth()+1)+'/'+d.getDate();}
@@ -499,31 +519,68 @@ function renderCalendar(){
 // ── 予約一覧 ──
 function renderBookings(){
   const el=document.getElementById('bk-list');
-  const list=Object.values(bookings).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
-  if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">予約がありません</div>';return;}
-  el.innerHTML=list.map(b=>{
-    const c=bkc(b);const isEvt=b.type==='event',isGrp=b.grp==='group';
-    const isOth=b.type==='other';
+  const now=new Date();
+
+  // 表示対象月
+  const target=new Date(now.getFullYear(),now.getMonth()+bkMonthOffset,1);
+  const targetYear=target.getFullYear();
+  const targetMonth=target.getMonth()+1;
+  const targetKey=targetYear+'-'+String(targetMonth).padStart(2,'0');
+
+  // ラベル・ボタン更新
+  const labelEl=document.getElementById('bk-month-label');
+  if(labelEl) labelEl.textContent=targetYear+'年'+targetMonth+'月の予約';
+  ['btn-prev-mo','btn-cur-mo','btn-next-mo'].forEach((id,i)=>{
+    const btn=document.getElementById(id);
+    if(btn) btn.classList.toggle('bk-mo-active',[-1,0,1][i]===bkMonthOffset);
+  });
+
+  // 今日の日付文字列（グレーアウト判定用）
+  const todayStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+
+  // 対象月フィルタ＆ソート
+  const list=Object.values(bookings)
+    .filter(b=>b.date.startsWith(targetKey))
+    .sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+
+  el.innerHTML='';
+  if(!list.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px">この月の予約はありません</div>';
+    return;
+  }
+
+  list.forEach(b=>{
+    const c=bkc(b);
+    const isEvt=b.type==='event',isGrp=b.grp==='group',isOth=b.type==='other';
     const typeLbl=isEvt?'イベント':isOth?'その他':isGrp?'団体':'個人';
     const typeCls=isEvt?'b-evt':isOth?'b-oth':isGrp?'b-grp':'b-ind';
-    const paxBadge=isGrp?`<div class="bdg b-grp">${b.pax}名</div>`:'';
-    return `<div class="lrow">
-      <div class="av" style="background:${c.avBg};color:${c.avTc}">${b.name[0]}</div>
-      <div class="rm">
-        <div class="rn">${b.name}</div>
-        <div class="rs">${b.space}<br>${b.date} ${b.start}〜${b.end}</div>
-        <div class="row-badges">
-          ${paxBadge}
-          <div class="bdg ${typeCls}">${typeLbl}</div>
-          <div class="bdg ${b.status==='確認済み'?'b-ok':'b-warn'}">${b.status}</div>
-        </div>
-      </div>
-      <div class="row-actions">
-        <button class="icon-btn" onclick="openBkModal('${b.id}')">✏</button>
-        <button class="icon-btn" onclick="delBk('${b.id}')" style="color:#F0B8B5">×</button>
-      </div>
-    </div>`;
-  }).join('');
+    const paxBadge=isGrp?'<div class="bdg b-grp">'+b.pax+'名</div>':'';
+    const isPast=b.date<todayStr;
+    const pastBadge=isPast?'<div class="bdg" style="background:#eee;color:#aaa">終了</div>':'';
+    const avBg=isPast?'#e0e0e0':c.avBg;
+    const avTc=isPast?'#aaa':c.avTc;
+
+    const row=document.createElement('div');
+    row.className='lrow'+(isPast?' bk-row-past':'');
+    row.innerHTML=
+      '<div class="av" style="background:'+avBg+';color:'+avTc+'">'+b.name[0]+'</div>'+
+      '<div class="rm">'+
+        '<div class="rn">'+b.name+'</div>'+
+        '<div class="rs">'+b.space+'<br>'+b.date+' '+b.start+'〜'+b.end+'</div>'+
+        '<div class="row-badges">'+paxBadge+
+          '<div class="bdg '+typeCls+'">'+typeLbl+'</div>'+
+          '<div class="bdg '+(b.status==='確認済み'?'b-ok':'b-warn')+'">'+b.status+'</div>'+
+          pastBadge+
+        '</div>'+
+      '</div>'+
+      '<div class="row-actions">'+
+        '<button class="icon-btn edit-btn">✏</button>'+
+        '<button class="icon-btn del-btn" style="color:#F0B8B5">×</button>'+
+      '</div>';
+    row.querySelector('.edit-btn').addEventListener('click',()=>openBkModal(b.id));
+    row.querySelector('.del-btn').addEventListener('click',()=>delBk(b.id));
+    el.appendChild(row);
+  });
 }
 
 // ── シフト管理 ──
